@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Workout Summary</title>
+</head>
+<body>
+    <h1>Workout Summary for {{ today }}</h1>
+
+    {% if sets %}
+        <ul>
+            {% for s in sets %}
+                <li>
+                    {{ s[1] }} – {{ s[2] }} reps @ {{ s[3] }} lbs – RPE {{ s[4] }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No sets logged today.</p>
+    {% endif %}
+
+    {% if muscle_counts %}
+        <h3>Sets per Muscle Group:</h3>
+            <ul>
+                {% for muscle, count in muscle_counts.items() %}
+                    <li>{{ muscle }}: {{ count }} sets</li>
+                {% endfor %}
+            </ul>
+    {% endif %}
+
+    <a href="/add-workout"><button>Add More Sets</button></a>
+    <a href="/"><button>Home</button></a>
+</body>
+</html>

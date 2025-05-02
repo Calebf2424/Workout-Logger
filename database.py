@@ -1,0 +1,66 @@
+import sqlite3
+
+DB_NAME = "sets.db"
+
+def get_connection():
+    return sqlite3.connect(DB_NAME)
+
+def create_table():
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS sets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise TEXT NOT NULL,
+        reps INTEGER,
+        weight INTEGER,
+        rpe REAL,
+        date TEXT NOT NULL,
+        user_id INTEGER
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def insert_set(exercise, reps, weight, rpe, date, user_id=None):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+    INSERT INTO sets (exercise, reps, weight, rpe, date, user_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """, (exercise, reps, weight, rpe, date, user_id))
+
+    conn.commit()
+    conn.close()
+
+def get_all_sets():
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM sets")
+    rows = c.fetchall()
+
+    conn.close()
+    return rows
+
+def get_specific_day(chosen_date):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM sets WHERE date = ?", (chosen_date,))
+
+    rows = c.fetchall()
+
+    conn.close()
+    return rows
+
+def clear_database():
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("DELETE FROM sets")
+    conn.commit()
+    conn.close()

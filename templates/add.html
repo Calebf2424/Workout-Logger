@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Workout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px 30px;
+            max-width: 400px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-container input,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .flash-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 400px;
+            margin: auto;
+            animation: fadeOut 1s ease-out 2s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+</head>
+<body class="text-center">
+
+    <h1>Add a Set</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-message">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <div class="form-container">
+        <form action="/add-workout" method="POST">
+            <select id="exercise" name="exercise" required>
+                <option value="">-- Select an exercise --</option>
+                {% for e in exercises %}
+                    <option value="{{ e.name }}">{{ e.name }} ({{ e.muscle }})</option>
+                {% endfor %}
+            </select>
+
+            <label for="reps">Number of Reps:</label><br>
+            <input type="range" id="reps" name="reps" min="1" max="20" value="5" oninput="repsOutput.value = reps.value">
+            <output id="repsOutput">5</output><br>
+
+            <label for="weight">Weight(lbs):</label><br>
+            <input type="range" id="weight" name="weight" min="0" max="1000" step="5" value="135" oninput="weightOutput.value = weight.value">
+            <output id="weightOutput">135</output><br>
+
+            <label for="rpe">RPE:</label><br>
+            <input type="range" id="rpe" name="rpe" min="6" max="10" step="0.5" value="8" oninput="rpeOutput.value = rpe.value">
+            <output id="rpeOutput">8</output><br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="/summary">
+            <button>End Workout</button>
+        </a>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+        new Choices(document.getElementById('exercise'), {
+            searchEnabled: true,
+            shouldSort: false
+        });
+    </script>
+</body>
+</html>

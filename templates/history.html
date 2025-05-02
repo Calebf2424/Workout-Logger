@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Workout History</title>
+</head>
+<body>
+    <h1>Workout History</h1>
+
+    <form method="POST">
+        <label for="date">Choose a date:</label>
+        <input type="date" name="date" required>
+        <button type="submit">View</button>
+    </form>
+
+    {% if chosen_date %}
+        <h2>Results for {{ chosen_date }}</h2>
+        {% if sets %}
+            <ul>
+                {% for s in sets %}
+                    <li>{{ s[1] }} – {{ s[2] }} reps @ {{ s[3] }} lbs – RPE {{ s[4] }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No sets found for that day.</p>
+        {% endif %}
+    {% endif %}
+    
+    {% if muscle_counts %}
+        <h3>Sets per Muscle Group:</h3>
+            <ul>
+                {% for muscle, count in muscle_counts.items() %}
+                    <li>{{ muscle }}: {{ count }} sets</li>
+                {% endfor %}
+            </ul>
+    {% endif %}
+
+    <a href="/"><button>Home</button></a>
+</body>
+</html>
