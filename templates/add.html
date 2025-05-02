@@ -60,13 +60,32 @@
     {% endwith %}
     <div class="form-container">
         <form action="/add-workout" method="POST">
-            <select id="exercise" name="exercise" required>
-                <option value="">-- Select an exercise --</option>
-                {% for e in exercises %}
-                    <option value="{{ e.name }}">{{ e.name }} ({{ e.muscle }})</option>
-                {% endfor %}
-            </select>
-
+            <label for="exercise">Choose an exercise:</label><br>
+            <select id="exercise" name="exercise" required onchange="toggleCustomExercise(this.value)">
+              <option value="">-- Select an exercise --</option>
+              {% for e in exercises %}
+                <option value="{{ e.name }}">{{ e.name }} ({{ e.muscle }})</option>
+              {% endfor %}
+              <option value="__custom__">Custom Exercise</option>
+            </select><br>
+            
+            <div id="custom-fields" style="display: none;">
+              <label for="custom_name">Custom Name:</label>
+              <input type="text" name="custom_name" id="custom_name">
+            
+              <label for="custom_muscle">Muscle Group:</label>
+              <select name="custom_muscle" id="custom_muscle">
+                <option value="">-- Choose muscle group --</option>
+                <option value="Chest">Chest</option>
+                <option value="Back">Back</option>
+                <option value="Legs">Legs</option>
+                <option value="Shoulders">Shoulders</option>
+                <option value="Arms">Arms</option>
+                <option value="Core">Core</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
             <label for="reps">Number of Reps:</label><br>
             <input type="range" id="reps" name="reps" min="1" max="20" value="5" oninput="repsOutput.value = reps.value">
             <output id="repsOutput">5</output><br>
@@ -95,5 +114,19 @@
             shouldSort: false
         });
     </script>
+    <script>
+        function toggleCustomExercise(value) {
+          const customFields = document.getElementById("custom-fields");
+          if (value === "__custom__") {
+            customFields.style.display = "block";
+            document.getElementById("custom_name").required = true;
+            document.getElementById("custom_muscle").required = true;
+          } else {
+            customFields.style.display = "none";
+            document.getElementById("custom_name").required = false;
+            document.getElementById("custom_muscle").required = false;
+          }
+        }
+      </script>
 </body>
 </html>

@@ -18,16 +18,19 @@ def index():
 def add_workout():
     if request.method == "POST":
         exercise = request.form.get("exercise")
+        if exercise == "__custom__":
+            exercise = request.form.get("custom_name") + " (" + request.form.get("custom_muscle") + ")"
+
         reps = request.form.get("reps")
         weight = request.form.get("weight")
         rpe = request.form.get("rpe")
-        log_date = date.today().isoformat()  # default to today
+        log_date = date.today().isoformat()
 
-        print(f"{exercise}, {reps} reps @ {weight}lbs, RPE {rpe}, Date: {log_date}")
         insert_set(exercise, int(reps), int(weight), float(rpe), log_date, None)
         flash("Set added!")
         return redirect(url_for("add_workout"))
-    return render_template("add.html", exercises=presaved_exercises) #link data.py
+
+    return render_template("add.html", exercises=presaved_exercises)
 
 #view past workouts by chosen date
 @app.route("/history", methods=["GET", "POST"])
