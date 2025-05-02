@@ -16,16 +16,19 @@ def index():
 #page for adding sets to todays workout
 @app.route("/add-workout", methods=["GET", "POST"])
 def add_workout():
-    precise = True  # ✅ or False if you want to switch
     if request.method == "POST":
         exercise = request.form.get("exercise")
         if exercise == "__custom__":
             name = request.form.get("custom_name")
             muscle = request.form.get("custom_muscle")
-            if precise:
-                exercise = f"{name}||{muscle}||"
+            exercise = name
+            # Add to in-memory presaved_exercises
+            for e in presaved_exercises:
+                if e["name"] == name:
+                    e["muscle"] = muscle
+                    break
             else:
-                exercise = f"{name}||||{muscle}" 
+                presaved_exercises.append({"name": name, "muscle": muscle})
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
@@ -36,7 +39,7 @@ def add_workout():
         flash("Set added!")
         return redirect(url_for("add_workout"))
 
-    muscle_groups = sorted(set(e["precise"] for e in presaved_exercises))
+    muscle_groups = sorted(set(e["muscle"] for e in presaved_exercises))
     return render_template("add.html", exercises=presaved_exercises, muscle_groups=muscle_groups)
 
 #view past workouts by chosen date
@@ -45,7 +48,7 @@ def history():
     if request.method == "POST":
         chosen_date = request.form.get("date")
         sets = get_specific_day(chosen_date)
-        muscle_counts = summarize_muscles(sets, precise=True)
+        muscle_counts = summarize_muscles(sets)
         return render_template("history.html", sets=sets, chosen_date=chosen_date, muscle_counts=muscle_counts)
     
     return render_template("history.html", sets=None, chosen_date=None)
@@ -60,7 +63,7 @@ def progress():
 def summary():
     today = date.today().isoformat()
     sets = get_specific_day(today)
-    muscle_counts = summarize_muscles(sets, precise=True)
+    muscle_counts = summarize_muscles(sets)
 
     return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts)
 
