@@ -64,7 +64,7 @@
             <select id="exercise" name="exercise" required onchange="toggleCustomExercise(this.value)">
               <option value="">-- Select an exercise --</option>
               {% for e in exercises %}
-                <option value="{{ e.name }}">{{ e.name }} ({{ e.muscle }})</option>
+                <option value="{{ e.name }}">{{ e.name }}</option>
               {% endfor %}
               <option value="__custom__">Custom Exercise</option>
             </select><br>
@@ -74,16 +74,13 @@
               <input type="text" name="custom_name" id="custom_name">
             
               <label for="custom_muscle">Muscle Group:</label>
-              <select name="custom_muscle" id="custom_muscle">
+              <label for="custom_muscle">Muscle Group:</label>
+              <select name="custom_muscle" id="custom_muscle" required>
                 <option value="">-- Choose muscle group --</option>
-                <option value="Chest">Chest</option>
-                <option value="Back">Back</option>
-                <option value="Legs">Legs</option>
-                <option value="Shoulders">Shoulders</option>
-                <option value="Arms">Arms</option>
-                <option value="Core">Core</option>
-                <option value="Other">Other</option>
-              </select>
+                {% for m in muscle_groups %}
+                  <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+              </select>             
             </div>
             
             <label for="reps">Number of Reps:</label><br>
