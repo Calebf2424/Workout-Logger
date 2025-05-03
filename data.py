@@ -75,6 +75,12 @@ preferred_order = [
     "Abs", "Obliques"
 ]
 
+app_settings = {
+    "rpe_enabled": False,
+    "sort_by_preference": True,
+    "dark_mode": False
+}
+
 def summarize_muscles(sets):
     # Build master lookup
     muscle_map = {e["name"]: e["muscle"] for e in presaved_exercises}

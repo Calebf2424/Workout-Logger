@@ -90,9 +90,11 @@
             <input type="range" id="weight" name="weight" min="0" max="1000" step="5" value="135" oninput="weightOutput.value = weight.value">
             <output id="weightOutput">135</output><br>
 
+            {% if settings.rpe_enabled %}
             <label for="rpe">RPE:</label><br>
             <input type="range" id="rpe" name="rpe" min="6" max="10" step="0.5" value="8" oninput="rpeOutput.value = rpe.value">
             <output id="rpeOutput">8</output><br>
+            {% endif %}
 
             <button type="submit">Submit</button>
         </form>

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
 from datetime import date
 from database import *
-from data import presaved_exercises, summarize_muscles, register_custom_exercise, preferred_order
+from data import presaved_exercises, summarize_muscles, register_custom_exercise, preferred_order, app_settings
 
 app = Flask(__name__)
 app.secret_key = "added"
@@ -28,10 +28,10 @@ def add_workout():
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
-        rpe = request.form.get("rpe")
+        rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
         log_date = date.today().isoformat()
 
-        insert_set(exercise, int(reps), int(weight), float(rpe), log_date, None)
+        insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, None)
         flash("Set added!")
         return redirect(url_for("add_workout"))
 
@@ -40,7 +40,7 @@ def add_workout():
         set(e["muscle"] for e in all_exercises),
         key=lambda x: preferred_order.index(x) if x in preferred_order else float("inf")
     )
-    return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups)
+    return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=app_settings)
 
 #view past workouts by chosen date
 @app.route("/history", methods=["GET", "POST"])
@@ -70,10 +70,13 @@ def summary():
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     if request.method == "POST":
-        #will add optional settings later
-        pass
-        return render_template("settings.html")
-    return render_template("settings.html")
+        app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
+        app_settings["sort_by_preference"] = request.form.get("sort_order") == "preferred"
+        app_settings["dark_mode"] = request.form.get("dark_mode") == "on"
+        flash("Settings updated!")
+        return redirect(url_for("settings"))
+
+    return render_template("settings.html", settings=app_settings)
 
 #temp for testing
 @app.route("/delete-db")

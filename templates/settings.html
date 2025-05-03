@@ -5,7 +5,19 @@
     <title>Settings</title>
 </head>
 <body>
-    <h1>Will add settings page here</h1>
+    <form method="POST">
+        <label><input type="checkbox" name="rpe_enabled" {% if settings.rpe_enabled %}checked{% endif %}> Enable RPE</label><br>
+    
+        <label for="sort_order">Sort Muscle Groups:</label>
+        <select name="sort_order">
+            <option value="preferred" {% if settings.sort_by_preference %}selected{% endif %}>Preferred Order</option>
+            <option value="alphabetical" {% if not settings.sort_by_preference %}selected{% endif %}>Alphabetical</option>
+        </select><br>
+    
+        <label><input type="checkbox" name="dark_mode" {% if settings.dark_mode %}checked{% endif %}> Enable Dark Mode</label><br>
+    
+        <button type="submit">Save Settings</button>
+    </form>    
     <a href="/"><button>Home</button></a>
 </body>
 </html>
