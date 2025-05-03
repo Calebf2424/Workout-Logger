@@ -5,7 +5,7 @@ DB_NAME = "sets.db"
 def get_connection():
     return sqlite3.connect(DB_NAME)
 
-def create_table():
+def create_sets_table():
     conn = get_connection()
     c = conn.cursor()
 
@@ -24,6 +24,18 @@ def create_table():
     conn.commit()
     conn.close()
 
+def create_custom_exercise_table():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS custom_exercises (
+            name TEXT PRIMARY KEY,
+            muscle TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
 def insert_set(exercise, reps, weight, rpe, date, user_id=None):
     conn = get_connection()
     c = conn.cursor()
@@ -33,6 +45,18 @@ def insert_set(exercise, reps, weight, rpe, date, user_id=None):
     VALUES (?, ?, ?, ?, ?, ?)
     """, (exercise, reps, weight, rpe, date, user_id))
 
+    conn.commit()
+    conn.close()
+
+def insert_custom_exercise(name, muscle):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+    INSERT INTO custom_exercises (name, muscle)
+    VALUES (?, ?)
+    """, (name, muscle))
+    
     conn.commit()
     conn.close()
 
@@ -56,6 +80,16 @@ def get_specific_day(chosen_date):
 
     conn.close()
     return rows
+
+def get_all_custom_exercises():
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("SELECT name, muscle FROM custom_exercises")
+
+    rows = c.fetchall()
+    conn.close()
+    return [{"name": row[0], "muscle": row[1]} for row in rows]
 
 def clear_database():
     conn = get_connection()

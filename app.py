@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
 from datetime import date
 from database import *
-from data import presaved_exercises, summarize_muscles
+from data import presaved_exercises, summarize_muscles, register_custom_exercise
 
 app = Flask(__name__)
 app.secret_key = "added"
 
-create_table()
+create_sets_table()
+create_custom_exercise_table()
 
 #home page
 @app.route("/")
@@ -23,12 +24,7 @@ def add_workout():
             muscle = request.form.get("custom_muscle")
             exercise = name
             # Add to in-memory presaved_exercises
-            for e in presaved_exercises:
-                if e["name"] == name:
-                    e["muscle"] = muscle
-                    break
-            else:
-                presaved_exercises.append({"name": name, "muscle": muscle})
+            register_custom_exercise(name, muscle, presaved_exercises)
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
@@ -39,8 +35,9 @@ def add_workout():
         flash("Set added!")
         return redirect(url_for("add_workout"))
 
-    muscle_groups = sorted(set(e["muscle"] for e in presaved_exercises))
-    return render_template("add.html", exercises=presaved_exercises, muscle_groups=muscle_groups)
+    all_exercises = presaved_exercises + get_all_custom_exercises()
+    muscle_groups = sorted(set(e["muscle"] for e in all_exercises))
+    return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups)
 
 #view past workouts by chosen date
 @app.route("/history", methods=["GET", "POST"])
@@ -53,7 +50,7 @@ def history():
     
     return render_template("history.html", sets=None, chosen_date=None)
 
-#to be added later, shows progress in certain excercises
+#to be added later, shows progress in certain exercises
 @app.route("/progress")
 def progress():
     return render_template("progress.html")

@@ -1,3 +1,4 @@
+from database import get_all_custom_exercises, insert_custom_exercise
 #exercises on left associated muscle groups on right
 presaved_exercises = [
     {"name": "Hip Abduction Machine", "muscle": "Abductors"},
@@ -65,35 +66,32 @@ presaved_exercises = [
     {"name": "Hyperextensions", "muscle": "Hamstrings"}
 ]
 
-def summarize_muscles(sets, precise=True):
-    # Map known exercises to their muscle group
-    muscle_map = {
-        e["name"]: (e["muscle"])
-        for e in presaved_exercises
-    }
+
+def summarize_muscles(sets):
+    # Build master lookup
+    muscle_map = {e["name"]: e["muscle"] for e in presaved_exercises}
+
+    # Include DB-loaded custom exercises
+    for e in get_all_custom_exercises():
+        muscle_map[e["name"]] = e["muscle"]
 
     muscle_counts = {}
     for s in sets:
         exercise_name = s[1]
-
-        # Check if it's a known exercise
-        muscle = muscle_map.get(exercise_name)
-
-        # Handle custom format: "Name||Precise||" or "Name||||Approx"
-        if not muscle and "||" in exercise_name:
-            parts = exercise_name.split("||")
-            # [0] is the name, [1] is precise, [3] is approx
-            if precise and len(parts) > 1:
-                muscle = parts[1].strip()
-            elif not precise and len(parts) > 3:
-                muscle = parts[3].strip()
-
-        if not muscle:
-            muscle = "Unknown"
-
+        muscle = muscle_map.get(exercise_name, "Unknown")
         muscle_counts[muscle] = muscle_counts.get(muscle, 0) + 1
 
     return muscle_counts
 
+def register_custom_exercise(name, muscle, presaved_exercises):
+    for e in presaved_exercises:
+        if e["name"] == name:
+            e["muscle"] = muscle
+            break
+    else:
+        presaved_exercises.append({"name": name, "muscle": muscle})
+
+    # Persist in DB
+    insert_custom_exercise(name, muscle)
 
 
