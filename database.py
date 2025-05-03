@@ -96,5 +96,6 @@ def clear_database():
     c = conn.cursor()
 
     c.execute("DELETE FROM sets")
+    c.execute("DELETE FROM custom_exercises")
     conn.commit()
     conn.close()

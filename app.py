@@ -71,7 +71,6 @@ def summary():
 def settings():
     if request.method == "POST":
         app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
-        app_settings["sort_by_preference"] = request.form.get("sort_order") == "preferred"
         app_settings["dark_mode"] = request.form.get("dark_mode") == "on"
         flash("Settings updated!")
         return redirect(url_for("settings"))

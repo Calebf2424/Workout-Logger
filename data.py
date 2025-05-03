@@ -77,7 +77,6 @@ preferred_order = [
 
 app_settings = {
     "rpe_enabled": False,
-    "sort_by_preference": True,
     "dark_mode": False
 }
 
