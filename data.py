@@ -66,6 +66,14 @@ presaved_exercises = [
     {"name": "Hyperextensions", "muscle": "Hamstrings"}
 ]
 
+preferred_order = [
+    "Chest", "Upper Chest", "Lower Chest",
+    "Back", "Lats", "Rhomboids", "Traps", "Erectors",
+    "Shoulders", "Front Delts", "Side Delts", "Rear Delts",
+    "Biceps", "Triceps", 
+    "Quads", "Hamstrings", "Glutes", "Calves", "Adductors", "Abductors",
+    "Abs", "Obliques"
+]
 
 def summarize_muscles(sets):
     # Build master lookup

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
 from datetime import date
 from database import *
-from data import presaved_exercises, summarize_muscles, register_custom_exercise
+from data import presaved_exercises, summarize_muscles, register_custom_exercise, preferred_order
 
 app = Flask(__name__)
 app.secret_key = "added"
@@ -36,7 +36,10 @@ def add_workout():
         return redirect(url_for("add_workout"))
 
     all_exercises = presaved_exercises + get_all_custom_exercises()
-    muscle_groups = sorted(set(e["muscle"] for e in all_exercises))
+    muscle_groups = sorted(
+        set(e["muscle"] for e in all_exercises),
+        key=lambda x: preferred_order.index(x) if x in preferred_order else float("inf")
+    )
     return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups)
 
 #view past workouts by chosen date
@@ -63,6 +66,14 @@ def summary():
     muscle_counts = summarize_muscles(sets)
 
     return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts)
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        #will add optional settings later
+        pass
+        return render_template("settings.html")
+    return render_template("settings.html")
 
 #temp for testing
 @app.route("/delete-db")
