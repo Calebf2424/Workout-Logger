@@ -91,11 +91,38 @@ def get_all_custom_exercises():
     conn.close()
     return [{"name": row[0], "muscle": row[1]} for row in rows]
 
+#for debugging
 def clear_database():
     conn = get_connection()
     c = conn.cursor()
 
     c.execute("DELETE FROM sets")
     c.execute("DELETE FROM custom_exercises")
+    conn.commit()
+    conn.close()
+
+def delete_set(set_id):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM sets WHERE id = ?", (set_id,))
+    conn.commit()
+    conn.close()
+
+def get_set_by_id(set_id):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM sets WHERE id = ?", (set_id,))
+    row = c.fetchone()
+    conn.close()
+    return row
+
+def update_set(set_id, reps, weight, rpe):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        UPDATE sets
+        SET reps = ?, weight = ?, rpe = ?
+        WHERE id = ?
+    """, (reps, weight, rpe, set_id))
     conn.commit()
     conn.close()

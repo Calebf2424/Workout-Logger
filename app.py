@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
 from datetime import date
 from database import *
-from data import presaved_exercises, summarize_muscles, register_custom_exercise, preferred_order, app_settings
+from data import *
 
 app = Flask(__name__)
 app.secret_key = "added"
@@ -47,10 +47,14 @@ def add_workout():
 def history():
     if request.method == "POST":
         chosen_date = request.form.get("date")
+    else:
+        chosen_date = request.args.get("date")
+
+    if chosen_date:
         sets = get_specific_day(chosen_date)
         muscle_counts = summarize_muscles(sets)
         return render_template("history.html", sets=sets, chosen_date=chosen_date, muscle_counts=muscle_counts)
-    
+
     return render_template("history.html", sets=None, chosen_date=None)
 
 #to be added later, shows progress in certain exercises
@@ -82,3 +86,31 @@ def settings():
 def delete_db():
     clear_database()
     return redirect(url_for("index"))
+
+@app.route("/delete-set/<int:set_id>", methods=["POST"])
+def delete_set_route(set_id):
+    date_param = request.args.get("date")
+    delete_set(set_id)  # your function that deletes by ID
+    if date_param:
+        return redirect(url_for("history", date=date_param))
+    return redirect(url_for("history"))
+
+@app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
+def edit_set_route(set_id):
+    date_param = request.args.get("date")
+
+    if request.method == "POST":
+        reps = int(request.form.get("reps"))
+        weight = int(request.form.get("weight"))
+        rpe = float(request.form.get("rpe"))
+
+        update_set(set_id, reps, weight, rpe)
+
+        return redirect(url_for("history", date=date_param))
+
+    set_data = get_set_by_id(set_id)
+    if not set_data:
+        flash("Set not found")
+        return redirect(url_for("history"))
+
+    return render_template("edit.html", set_data=set_data, date_param=date_param)
