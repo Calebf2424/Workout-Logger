@@ -11,13 +11,21 @@
         <ul>
             {% for s in sets %}
                 <li>
-                    {{ s[1] }} – {{ s[2] }} reps @ {{ s[3] }} lbs – RPE {{ s[4] }}
-                    <form action="{{ url_for('edit_set_route', set_id=s[0], date=chosen_date) }}" method="GET" style="display:inline;">
-                        <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;">✏️</button>
-                    </form>
-                    <form action="{{ url_for('delete_set_route', set_id=s[0]) }}" method="POST" style="display:inline;">
-                        <button type="submit" style="background:none;border:none;color:red;cursor:pointer;">🗑</button>
-                    </form>                    
+                    {{ s[1] }} – {{ s[2] }} reps @ {{ s[3] }} lbs                         
+                    {% if settings.rpe_enabled %}
+                        – RPE {{ s[4] }}
+                    {% endif %}
+                        <a href="{{ url_for('edit_set_route', set_id=s[0], origin='summary') }}"
+                        style="color:blue; text-decoration:none;">✏️</a>
+                        <!-- DELETE as a POST form -->
+                        <form action="{{ url_for('delete_set_route', set_id=s[0]) }}"
+                            method="POST" style="display:inline;">
+                        <input type="hidden" name="origin" value="summary">
+                        <button type="submit"
+                                style="background:none;border:none;color:red;cursor:pointer;">
+                            🗑
+                        </button>
+                        </form>                
                 </li>
             {% endfor %}
         </ul>

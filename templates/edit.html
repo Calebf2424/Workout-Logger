@@ -19,8 +19,7 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         .form-container input,
-        .form-container button,
-        .form-container select {
+        .form-container button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -30,20 +29,62 @@
 <body>
     <h1>Edit Set</h1>
     <div class="form-container">
-        <form action="/edit-set/{{ set_data[0] }}?date={{ date_param }}" method="POST">
+        <form action="{{ url_for('edit_set_route', set_id=set_data[0]) }}" method="POST">
+            <!-- Preserve where we came from -->
+            <input type="hidden" name="origin" value="{{ origin }}">
+            {% if origin == 'history' %}
+                <input type="hidden" name="date" value="{{ date_param }}">
+            {% endif %}
+
+            <p><strong>Exercise:</strong> {{ set_data[1] }}</p>
+
             <label for="reps">Reps:</label>
-            <input type="number" name="reps" id="reps" min="1" max="20" value="{{ set_data[2] }}" required>
+            <input
+                type="number"
+                name="reps"
+                id="reps"
+                min="1"
+                max="20"
+                value="{{ set_data[2] }}"
+                required
+            >
 
             <label for="weight">Weight (lbs):</label>
-            <input type="number" name="weight" id="weight" min="0" max="1000" step="5" value="{{ set_data[3] }}" required>
+            <input
+                type="number"
+                name="weight"
+                id="weight"
+                min="0"
+                max="1000"
+                step="5"
+                value="{{ set_data[3] }}"
+                required
+            >
 
-            <label for="rpe">RPE:</label>
-            <input type="number" name="rpe" id="rpe" min="6" max="10" step="0.5" value="{{ set_data[4] }}" required>
+            {% if settings.rpe_enabled %}
+                <label for="rpe">RPE (optional):</label>
+                <input
+                    type="number"
+                    name="rpe"
+                    id="rpe"
+                    min="6"
+                    max="10"
+                    step="0.5"
+                    value="{{ set_data[4] or '' }}"
+                >
+            {% endif %}
 
             <button type="submit">Save Changes</button>
         </form>
+
         <div style="margin-top: 20px;">
-            <a href="/history">
+            <a
+                href="{% if origin == 'history' %}
+                          {{ url_for('history', date=date_param) }}
+                       {% else %}
+                          {{ url_for('summary') }}
+                       {% endif %}"
+            >
                 <button>Cancel</button>
             </a>
         </div>

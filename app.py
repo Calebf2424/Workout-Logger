@@ -53,7 +53,7 @@ def history():
     if chosen_date:
         sets = get_specific_day(chosen_date)
         muscle_counts = summarize_muscles(sets)
-        return render_template("history.html", sets=sets, chosen_date=chosen_date, muscle_counts=muscle_counts)
+        return render_template("history.html", sets=sets, chosen_date=chosen_date, muscle_counts=muscle_counts, settings=app_settings)
 
     return render_template("history.html", sets=None, chosen_date=None)
 
@@ -69,7 +69,7 @@ def summary():
     sets = get_specific_day(today)
     muscle_counts = summarize_muscles(sets)
 
-    return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts)
+    return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts, settings=app_settings)
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
@@ -87,30 +87,54 @@ def delete_db():
     clear_database()
     return redirect(url_for("index"))
 
+# DELETE
 @app.route("/delete-set/<int:set_id>", methods=["POST"])
 def delete_set_route(set_id):
-    date_param = request.args.get("date")
-    delete_set(set_id)  # your function that deletes by ID
-    if date_param:
-        return redirect(url_for("history", date=date_param))
-    return redirect(url_for("history"))
+    origin    = request.form.get("origin")          # "summary" or "history"
+    date_param= request.form.get("date")            # only set if origin=="history"
+    delete_set(set_id)
 
+    if origin == "summary":
+        return redirect(url_for("summary"))
+    elif origin == "history" and date_param:
+        return redirect(url_for("history", date=date_param))
+    else:
+        return redirect(url_for("index"))
+
+#edit
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
 def edit_set_route(set_id):
-    date_param = request.args.get("date")
-
     if request.method == "POST":
-        reps = int(request.form.get("reps"))
-        weight = int(request.form.get("weight"))
-        rpe = float(request.form.get("rpe"))
+        reps      = int(request.form["reps"])
+        weight    = int(request.form["weight"])
+
+        # Only grab RPE if enabled
+        if app_settings["rpe_enabled"]:
+            rpe_raw = request.form.get("rpe")
+            rpe = float(rpe_raw) if rpe_raw else None
+        else:
+            rpe = None
+
+        origin    = request.form["origin"]
+        date_param= request.form.get("date")
 
         update_set(set_id, reps, weight, rpe)
 
-        return redirect(url_for("history", date=date_param))
+        if origin == "summary":
+            return redirect(url_for("summary"))
+        else:
+            return redirect(url_for("history", date=date_param))
 
-    set_data = get_set_by_id(set_id)
-    if not set_data:
-        flash("Set not found")
-        return redirect(url_for("history"))
+    # GET
+    origin     = request.args.get("origin")
+    date_param = request.args.get("date")
+    set_data   = get_set_by_id(set_id)
+    return render_template(
+        "edit.html",
+        set_data=set_data,
+        origin=origin,
+        date_param=date_param,
+        settings=app_settings 
+    )
 
-    return render_template("edit.html", set_data=set_data, date_param=date_param)
+
