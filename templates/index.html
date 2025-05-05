@@ -1,37 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <title>Workout Tracker - Home</title>
+{# templates/index.html #}
+{% extends "base.html" %}
+{% block title %}Home – Workout Tracker{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-</head>
-<body class="text-center">
+{% block content %}
+  <h1 class="text-white fw-bold mb-5">Workout Tracker</h1>
 
-    <h1>Welcome to Workout Tracker!</h1>
-
-    <div style="margin-top: 20px;">
-        <a href="/add-workout">
-            <button style="background-color: green; color: white;">Start Workout</button>
-        </a>
-        <a href="/history">
-            <button style="background-color: blue; color: white;">View History</button>
-        </a>
-        <a href="/settings">
-            <button style="background-color: purple; color: white;">Settings</button>
-        </a>
-        <a href="/delete-db">
-            <button style="background-color: red; color: white;">Delete All Sets</button>
-        </a>
+  <div class="row g-4 w-100" style="max-width: 400px;">
+    <!-- Start Workout -->
+    <div class="col-6">
+      <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-hourglass-top"></i>
+            <h5 class="card-title">Start Workout</h5>
+          </div>
+        </div>
+      </a>
     </div>
-  <!-- Bootstrap JS bundle with Popper -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-    crossorigin="anonymous"
-  ></script>
-</body>
-</html>
+
+    <!-- History -->
+    <div class="col-6">
+      <a href="{{ url_for('history') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-calendar3"></i>
+            <h5 class="card-title">History</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Progress -->
+    <div class="col-6">
+      <a href="{{ url_for('progress') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-graph-up"></i>
+            <h5 class="card-title">Progress</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Settings -->
+    <div class="col-6">
+      <a href="{{ url_for('settings') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-gear"></i>
+            <h5 class="card-title">Settings</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+{% endblock %}
