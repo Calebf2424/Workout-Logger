@@ -44,6 +44,7 @@ presaved_exercises = [
     {"name": "Rotary Torso Machine", "muscle": "Obliques"},
     {"name": "Leg Press", "muscle": "Quads"},
     {"name": "Barbell Squat", "muscle": "Quads"},
+    {"name": "Low Bar Squat", "muscle": "Hamstrings"},
     {"name": "Leg Extension Machine", "muscle": "Quads"},
     {"name": "Hack Squat", "muscle": "Quads"},
     {"name": "Smith Machine Squat", "muscle": "Quads"},

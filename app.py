@@ -86,11 +86,11 @@ def delete_db():
     clear_database()
     return redirect(url_for("index"))
 
-# DELETE
+#delete a set
 @app.route("/delete-set/<int:set_id>", methods=["POST"])
 def delete_set_route(set_id):
-    origin    = request.form.get("origin")          # "summary" or "history"
-    date_param= request.form.get("date")            # only set if origin=="history"
+    origin = request.form.get("origin")
+    date_param = request.form.get("date")
     delete_set(set_id)
 
     if origin == "summary":
@@ -104,8 +104,8 @@ def delete_set_route(set_id):
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
 def edit_set_route(set_id):
     if request.method == "POST":
-        reps      = int(request.form["reps"])
-        weight    = int(request.form["weight"])
+        reps = int(request.form["reps"])
+        weight = int(request.form["weight"])
 
         # Only grab RPE if enabled
         if app_settings["rpe_enabled"]:
@@ -125,9 +125,9 @@ def edit_set_route(set_id):
             return redirect(url_for("history", date=date_param))
 
     # GET
-    origin     = request.args.get("origin")
+    origin = request.args.get("origin")
     date_param = request.args.get("date")
-    set_data   = get_set_by_id(set_id)
+    set_data = get_set_by_id(set_id)
     return render_template(
         "edit.html",
         set_data=set_data,
