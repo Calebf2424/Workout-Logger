@@ -53,7 +53,7 @@ def insert_custom_exercise(name, muscle):
     c = conn.cursor()
 
     c.execute("""
-    INSERT INTO custom_exercises (name, muscle)
+    INSERT OR IGNORE INTO custom_exercises (name, muscle)
     VALUES (?, ?)
     """, (name, muscle))
     
