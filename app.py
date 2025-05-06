@@ -94,16 +94,17 @@ def delete_set_route(set_id):
     delete_set(set_id)
 
     if origin == "summary":
-        return redirect(url_for("summary"))
+        return redirect(url_for("summary") + "#exercises")
     elif origin == "history" and date_param:
         return redirect(url_for("history", date=date_param))
     else:
         return redirect(url_for("index"))
 
-#edit
+# Edit a set
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
 def edit_set_route(set_id):
     if request.method == "POST":
+        # Parse submitted form values
         reps = int(request.form["reps"])
         weight = int(request.form["weight"])
 
@@ -114,24 +115,28 @@ def edit_set_route(set_id):
         else:
             rpe = None
 
-        origin    = request.form["origin"]
-        date_param= request.form.get("date")
+        # Where we came from (summary/history) and date if history
+        origin     = request.form.get("origin")
+        date_param = request.form.get("date")
 
+        # Update in the DB
         update_set(set_id, reps, weight, rpe)
 
+        # Redirect back, anchoring to #exercises if from summary
         if origin == "summary":
-            return redirect(url_for("summary"))
+            return redirect(url_for("summary") + "#exercises")
         else:
             return redirect(url_for("history", date=date_param))
 
-    # GET
-    origin = request.args.get("origin")
+    # GET -> render the edit form
+    origin     = request.args.get("origin")
     date_param = request.args.get("date")
-    set_data = get_set_by_id(set_id)
+    set_data   = get_set_by_id(set_id)
+
     return render_template(
         "edit.html",
         set_data=set_data,
         origin=origin,
         date_param=date_param,
-        settings=app_settings 
+        settings=app_settings
     )

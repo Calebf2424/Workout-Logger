@@ -12,7 +12,7 @@
         <!-- Tabs -->
         <div class="d-flex mb-4">
           <button id="tab-summary"
-                  class="btn btn-outline-primary flex-fill me-2 active"
+                  class="btn btn-outline-primary flex-fill me-2"
                   onclick="showTab('summary')">
             Summary
           </button>
@@ -26,7 +26,7 @@
         <!-- SUMMARY TAB -->
         <div id="summaryTab">
           {% set total_sets = muscle_counts.values() | sum %}
-          {% set rpe_list = sets | map(attribute=4) | select | list %}
+          {% set rpe_list   = sets | map(attribute=4) | select | list %}
 
           <!-- Stats Row -->
           <div class="d-flex justify-content-between mb-3">
@@ -34,12 +34,11 @@
               <small class="text-muted">Total Sets</small>
               <div class="fs-5 fw-semibold">{{ total_sets }}</div>
             </div>
-
             {% if settings.rpe_enabled and rpe_list %}
             <div class="text-center flex-fill">
               <small class="text-muted">Avg RPE</small>
               <div class="fs-5 fw-semibold">
-                {{ (rpe_list | sum / (rpe_list | length)) | round(1) }}
+                {{ (rpe_list|sum / (rpe_list|length))|round(1) }}
               </div>
             </div>
             {% endif %}
@@ -57,13 +56,15 @@
               <div>
                 <div class="fw-semibold">{{ s[1] }}</div>
                 <small class="text-muted">
-                  {{ s[2] }} reps &bull; {{ s[3] }} lbs
-                  {% if settings.rpe_enabled and s[4] is not none %}&bull; RPE {{ s[4] }}{% endif %}
+                  {{ s[2] }} reps • {{ s[3] }} lbs
+                  {% if settings.rpe_enabled and s[4] is not none %}• RPE {{ s[4] }}{% endif %}
                 </small>
               </div>
-              <div class="btn-group btn-group-sm">
+              <div class="btn-group btn-group-sm gap-2">
                 <a href="{{ url_for('edit_set_route', set_id=s[0], origin='summary') }}"
-                   class="btn btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                   class="btn btn-outline-secondary">
+                  <i class="bi bi-pencil"></i>
+                </a>
                 <form action="{{ url_for('delete_set_route', set_id=s[0]) }}"
                       method="POST" class="d-inline">
                   <input type="hidden" name="origin" value="summary">
@@ -94,35 +95,27 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
   <script>
     function showTab(tab) {
-      document.getElementById('summaryTab').style.display   = tab === 'summary'   ? 'block' : 'none';
-      document.getElementById('exercisesTab').style.display = tab === 'exercises' ? 'block' : 'none';
-      document.getElementById('tab-summary').classList.toggle('active',   tab === 'summary');
-      document.getElementById('tab-exercises').classList.toggle('active', tab === 'exercises');
+      document.getElementById('summaryTab').style.display   = tab==='summary'   ? 'block' : 'none';
+      document.getElementById('exercisesTab').style.display = tab==='exercises' ? 'block' : 'none';
+      document.getElementById('tab-summary').classList.toggle('active',   tab==='summary');
+      document.getElementById('tab-exercises').classList.toggle('active', tab==='exercises');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Prepare chart data
+      // 1) Pick initial tab based on URL hash
+      const hash = window.location.hash === '#exercises' ? 'exercises' : 'summary';
+      showTab(hash);
+
+      // 2) Render chart
       const labels = {{ muscle_counts.keys()   | list | tojson }};
       const data   = {{ muscle_counts.values() | list | tojson }};
       const ctx    = document.getElementById('muscleChart').getContext('2d');
-
       new Chart(ctx, {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Sets per Muscle Group',
-            data,
-            backgroundColor: 'rgba(13,110,253,0.7)',
-            borderRadius: 4,
-            barPercentage: 0.6
-          }]
-        },
+        data: { labels, datasets: [{ data, backgroundColor:'rgba(13,110,253,0.7)', borderRadius:4, barPercentage:0.6 }] },
         options: {
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
-          },
-          plugins: { legend: { display: false } }
+          scales: { y: { beginAtZero:true, ticks:{ stepSize:1 } } },
+          plugins: { legend:{ display:false } }
         }
       });
     });
