@@ -72,16 +72,69 @@
       accent-color: #0d6efd;   /* Bootstrap primary */
     }
 
-    /* Safari / older WebKit fallback */
-    input[type="range"]::-webkit-slider-thumb {
-      background: #0d6efd;
+    /* 1. Reset default appearance */
+    input[type="range"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 100%;
+      background: transparent; /* we'll style the track ourselves */
+      height: 8px;
+      /* declare our CSS var for the fill % */
+      --pct: 0%;
     }
+
+    /* 2. WebKit track */
     input[type="range"]::-webkit-slider-runnable-track {
-      background: #cfe2ff;     /* light blue track */
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(
+          to right,
+          #0d6efd 0%, 
+          #0d6efd var(--pct), 
+          #dee2e6 var(--pct), 
+          #dee2e6 100%
+      );
     }
+
+    /* 3. WebKit thumb */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #0d6efd;
+      margin-top: -4px; /* center thumb on 8px track */
+    }
+
+    /* 4. Firefox track */
+    input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(
+          to right,
+          #0d6efd 0%, 
+          #0d6efd var(--pct), 
+          #dee2e6 var(--pct), 
+          #dee2e6 100%
+      );
+    }
+
+    /* 5. Firefox thumb */
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #0d6efd;
+      border: none;
+    }
+    
   </style>
 </head>
 <body>
+      <!-- Toasts -->
+  <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
   <div class="container app-container">
     {% block content %}{% endblock %}
   </div>

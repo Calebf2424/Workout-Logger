@@ -3,7 +3,36 @@
 
 {% block content %}
   <h1 class="text-white fw-bold mb-4">Add a Set</h1>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const toastContainer = document.querySelector('.toast-container');
+          {% for msg in messages %}
+          // Create a toast element
+          const toastEl = document.createElement('div');
+          toastEl.className = 'toast align-items-center text-bg-success border-0';
+          toastEl.role = 'alert';
+          toastEl.ariaLive = 'assertive';
+          toastEl.ariaAtomic = 'true';
+          toastEl.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                {{ msg }}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                      data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>`;
+          toastContainer.appendChild(toastEl);
 
+          // Initialize & show
+          const bsToast = new bootstrap.Toast(toastEl, { delay: 1500 });
+          bsToast.show();
+          {% endfor %}
+        });
+      </script>
+    {% endif %}
+  {% endwith %}
   <div class="row justify-content-center w-100" style="max-width: 400px;">
     <div class="col-12">
       <div class="card home-card p-4">
@@ -25,7 +54,26 @@
             </select>
           </div>
 
-          <!-- 2) Reps steppers + editable -->
+          <!-- 3) Custom‐exercise fields -->
+          <div id="custom-fields" class="mb-4" style="display: none;">
+            <div class="mb-3">
+              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+              <input type="text" id="custom_name" name="custom_name"
+                     class="form-control">
+            </div>
+            <div>
+              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+              <select id="custom_muscle" name="custom_muscle"
+                      class="form-select">
+                <option value="">Choose muscle group</option>
+                {% for m in muscle_groups %}
+                  <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- 4) Reps steppers + editable -->
           <div class="mb-4">
             <label for="reps" class="form-label fw-semibold">Number of Reps</label>
             <div class="d-flex justify-content-center">
@@ -43,7 +91,7 @@
             </div>
           </div>
 
-          <!-- 3) Weight slider + inline editable pill -->
+          <!-- 5) Weight slider + inline editable pill -->
           <div class="mb-4">
             <label class="form-label fw-semibold">Weight (lbs)</label>
             <div class="d-flex align-items-center">
@@ -65,26 +113,9 @@
             </div>
           </div>
 
-          <!-- 4) Custom‐exercise fields -->
-          <div id="custom-fields" class="mb-4" style="display: none;">
-            <div class="mb-3">
-              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
-              <input type="text" id="custom_name" name="custom_name"
-                     class="form-control">
-            </div>
-            <div>
-              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
-              <select id="custom_muscle" name="custom_muscle"
-                      class="form-select">
-                <option value="">Choose muscle group</option>
-                {% for m in muscle_groups %}
-                  <option value="{{ m }}">{{ m }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
 
-          <!-- 5) Optional RPE steppers + editable -->
+
+          <!-- 6) Optional RPE steppers + editable -->
           {% if settings.rpe_enabled %}
             <div class="mb-4">
               <label for="rpe" class="form-label fw-semibold">RPE</label>
@@ -104,7 +135,7 @@
             </div>
           {% endif %}
 
-          <!-- 6) Submit button -->
+          <!-- 7) Submit button -->
           <button type="submit" class="btn btn-primary w-100 py-2">
             Submit
           </button>
@@ -112,7 +143,7 @@
 
       </div>
 
-      <!-- 7) End Workout -->
+      <!-- 8) End Workout -->
       <div class="text-center mt-3">
         <a href="{{ url_for('summary') }}" class="btn btn-secondary">
           End Workout
@@ -126,12 +157,11 @@
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      new Choices(document.getElementById('exercise'), {
-        searchEnabled: true,
-        shouldSort: false
-      });
+      const slider = document.getElementById('weightRange');
+      updateSliderColor = () => syncWeightFromSlider(); 
+      // init once so it starts with the right fill
+      syncWeightFromSlider();
     });
-
     /* generic steppers and clamping */
     function change(field, delta) {
       const el = document.getElementById(field);
@@ -154,8 +184,19 @@
     function syncWeightFromSlider() {
       const slider = document.getElementById('weightRange');
       const input  = document.getElementById('weightInput');
-      input.value = slider.value;
+      const val    = parseInt(slider.value, 10);
+
+      // 1) keep the pill in sync
+      input.value = val;
+
+      // 2) compute fill percentage
+      const min = +slider.min, max = +slider.max;
+      const pct = (val - min) / (max - min) * 100;
+
+      // 3) update the CSS var we declared
+      slider.style.setProperty('--pct', pct + '%');
     }
+
     function syncWeightFromInput() {
       const slider = document.getElementById('weightRange');
       const input  = document.getElementById('weightInput');
@@ -179,5 +220,14 @@
         document.getElementById('custom_muscle').required = false;
       }
     }
+    function updateSliderColor(slider) {
+      const min   = +slider.min;
+      const max   = +slider.max;
+      const val   = +slider.value;
+      const pct   = (val - min) / (max - min) * 100;
+      slider.style.background = 
+      `linear-gradient(to right, #0d6efd 0%, #0d6efd ${pct}%, #dee2e6 ${pct}%, #dee2e6 100%)`;
+    }
+
   </script>
 {% endblock %}
