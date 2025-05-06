@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,
+  user-scalable=no">
   <title>{% block title %}Workout Tracker{% endblock %}</title>
 
   <!-- Bootstrap CSS -->
@@ -22,6 +23,10 @@
   />
 
   <style>
+    html, body {
+     /* Allow only panning; pinch-zoom & double-tap are blocked */
+      touch-action: pan-x pan-y;
+    }
     /* Page background gradient */
     body {
       background: linear-gradient(180deg, #4e8cff 0%, #a3d8ff 100%);
