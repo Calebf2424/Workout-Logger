@@ -3,46 +3,38 @@
 
 {% block content %}
   <h1 class="text-white fw-bold mb-4">Add a Set</h1>
+
   {% with messages = get_flashed_messages() %}
-  {% if messages %}
+    {% if messages %}
       <script>
         document.addEventListener('DOMContentLoaded', () => {
           const toastContainer = document.querySelector('.toast-container');
           {% for msg in messages %}
-          // Create a toast element
           const toastEl = document.createElement('div');
           toastEl.className = 'toast align-items-center text-bg-success border-0';
-          toastEl.role = 'alert';
-          toastEl.ariaLive = 'assertive';
-          toastEl.ariaAtomic = 'true';
+          toastEl.role = 'alert'; toastEl.ariaLive = 'assertive'; toastEl.ariaAtomic = 'true';
           toastEl.innerHTML = `
             <div class="d-flex">
-              <div class="toast-body">
-                {{ msg }}
-              </div>
+              <div class="toast-body">{{ msg }}</div>
               <button type="button" class="btn-close btn-close-white me-2 m-auto"
                       data-bs-dismiss="toast" aria-label="Close"></button>
             </div>`;
           toastContainer.appendChild(toastEl);
-
-          // Initialize & show
-          const bsToast = new bootstrap.Toast(toastEl, { delay: 1500 });
-          bsToast.show();
+          new bootstrap.Toast(toastEl, { delay: 1500 }).show();
           {% endfor %}
         });
       </script>
     {% endif %}
   {% endwith %}
+
   <div class="row justify-content-center w-100" style="max-width: 400px;">
     <div class="col-12">
       <div class="card home-card p-4">
-
         <form action="{{ url_for('add_workout') }}" method="POST">
-
-          <!-- 1) Exercise selector (searchable) -->
+          <!-- Exercise selector -->
           <div class="mb-4">
             <label for="exercise" class="form-label fw-semibold">Exercise</label>
-            <select id="exercise" name="exercise"
+            <select id="exercise" name="exercise" data-choices
                     class="form-select"
                     onchange="toggleCustomExercise(this.value)"
                     required>
@@ -54,17 +46,15 @@
             </select>
           </div>
 
-          <!-- 3) Custom‐exercise fields -->
+          <!-- Custom Exercise fields -->
           <div id="custom-fields" class="mb-4" style="display: none;">
             <div class="mb-3">
               <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
-              <input type="text" id="custom_name" name="custom_name"
-                     class="form-control">
+              <input type="text" id="custom_name" name="custom_name" class="form-control">
             </div>
             <div>
               <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
-              <select id="custom_muscle" name="custom_muscle"
-                      class="form-select">
+              <select id="custom_muscle" name="custom_muscle" class="form-select">
                 <option value="">Choose muscle group</option>
                 {% for m in muscle_groups %}
                   <option value="{{ m }}">{{ m }}</option>
@@ -73,7 +63,7 @@
             </div>
           </div>
 
-          <!-- 4) Reps steppers + editable -->
+          <!-- Reps steppers + editable -->
           <div class="mb-4">
             <label for="reps" class="form-label fw-semibold">Number of Reps</label>
             <div class="d-flex justify-content-center">
@@ -91,20 +81,17 @@
             </div>
           </div>
 
-          <!-- 5) Weight slider + inline editable pill -->
+          <!-- Weight slider + inline editable pill -->
           <div class="mb-4">
             <label class="form-label fw-semibold">Weight (lbs)</label>
             <div class="d-flex align-items-center">
-              <!-- slider -->
               <input type="range"
-                     id="weightRange"
+                     id="weightRange" name="weight"
                      class="form-range flex-grow-1 me-2"
                      min="0" max="1000" step="5" value="100"
                      oninput="syncWeightFromSlider()">
-              <!-- inline number input styled as pill -->
               <input type="number"
                      id="weightInput"
-                     name="weight"
                      class="form-control text-center"
                      style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
                      value="100" min="0" max="1000" step="5"
@@ -113,9 +100,7 @@
             </div>
           </div>
 
-
-
-          <!-- 6) Optional RPE steppers + editable -->
+          <!-- Optional RPE steppers + editable -->
           {% if settings.rpe_enabled %}
             <div class="mb-4">
               <label for="rpe" class="form-label fw-semibold">RPE</label>
@@ -135,79 +120,75 @@
             </div>
           {% endif %}
 
-          <!-- 7) Submit button -->
-          <button type="submit" class="btn btn-primary w-100 py-2">
-            Submit
-          </button>
+          <!-- Submit -->
+          <button type="submit" class="btn btn-primary w-100 py-2">Submit</button>
         </form>
-
       </div>
 
-      <!-- 8) End Workout -->
+      <!-- End Workout -->
       <div class="text-center mt-3">
-        <a href="{{ url_for('summary') }}" class="btn btn-secondary">
-          End Workout
-        </a>
+        <a href="{{ url_for('summary') }}" class="btn btn-secondary">End Workout</a>
       </div>
-
     </div>
   </div>
+{% endblock %}
 
-  <!-- page-specific scripts -->
+{% block page_scripts %}
+  <!-- Choices.js -->
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const slider = document.getElementById('weightRange');
-      updateSliderColor = () => syncWeightFromSlider(); 
-      // init once so it starts with the right fill
+      document.querySelectorAll('select[data-choices]').forEach(el => {
+        if (el.choices) el.choices.destroy();
+        el.choices = new Choices(el, {
+          searchEnabled: true,
+          shouldSort: false,
+          itemSelectText: ''
+        });
+      });
+
+      // Initialize weight slider fill
       syncWeightFromSlider();
     });
-    /* generic steppers and clamping */
+
     function change(field, delta) {
       const el = document.getElementById(field);
       let val = parseFloat(el.value) || 0;
       val = Math.min(el.max, Math.max(el.min, val + delta));
       el.value = val;
     }
-    function changeFloat(field, delta) {
-      change(field, delta);
-    }
+    function changeFloat(field, delta) { change(field, delta); }
     function clamp(field) {
-      const el = document.getElementById(field);
-      let val = parseFloat(el.value);
-      if (isNaN(val) || val < el.min) val = el.min;
-      if (val > el.max)            val = el.max;
-      el.value = val;
-    }
+      const el  = document.getElementById(field);
+      const raw = el.value.trim();
 
-    /* two-way bind slider + input for weight */
+      // if the field is blank, bail out and let the user type
+      if (raw === '') return;
+
+      // otherwise parse & clamp
+      let val = parseFloat(raw);
+      if (isNaN(val) || val < el.min) val = el.min;
+      if (val > el.max)               val = el.max;
+      el.value = val;
+    }   
     function syncWeightFromSlider() {
       const slider = document.getElementById('weightRange');
       const input  = document.getElementById('weightInput');
       const val    = parseInt(slider.value, 10);
-
-      // 1) keep the pill in sync
       input.value = val;
-
-      // 2) compute fill percentage
-      const min = +slider.min, max = +slider.max;
-      const pct = (val - min) / (max - min) * 100;
-
-      // 3) update the CSS var we declared
+      const pct = (val - slider.min) / (slider.max - slider.min) * 100;
       slider.style.setProperty('--pct', pct + '%');
     }
-
     function syncWeightFromInput() {
       const slider = document.getElementById('weightRange');
-      const input  = document.getElementById('weightInput');
-      let   val    = parseInt(input.value);
+      let val = parseInt(document.getElementById('weightInput').value, 10);
       if (isNaN(val)) val = slider.min;
       val = Math.min(slider.max, Math.max(slider.min, val));
-      input.value  = val;
+      document.getElementById('weightInput').value = val;
       slider.value = val;
+      syncWeightFromSlider();
     }
 
-    /* custom exercise toggler */
     function toggleCustomExercise(value) {
       const cf = document.getElementById('custom-fields');
       if (value === '__custom__') {
@@ -220,14 +201,5 @@
         document.getElementById('custom_muscle').required = false;
       }
     }
-    function updateSliderColor(slider) {
-      const min   = +slider.min;
-      const max   = +slider.max;
-      const val   = +slider.value;
-      const pct   = (val - min) / (max - min) * 100;
-      slider.style.background = 
-      `linear-gradient(to right, #0d6efd 0%, #0d6efd ${pct}%, #dee2e6 ${pct}%, #dee2e6 100%)`;
-    }
-
   </script>
 {% endblock %}

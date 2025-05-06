@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,
-  user-scalable=no">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>{% block title %}Workout Tracker{% endblock %}</title>
 
   <!-- Bootstrap CSS -->
@@ -24,7 +24,7 @@
 
   <style>
     html, body {
-     /* Allow only panning; pinch-zoom & double-tap are blocked */
+      /* Disable zoom gestures */
       touch-action: pan-x pan-y;
     }
     /* Page background gradient */
@@ -33,7 +33,7 @@
       min-height: 100vh;
       color: #1a202c;
     }
-    /* Center container vertically & horizontally */
+    /* Center container */
     .app-container {
       display: flex;
       flex-direction: column;
@@ -48,6 +48,7 @@
       transition: transform .2s;
       overflow: visible;
     }
+    .home-card:hover { transform: translateY(-5px); }
     .home-card .card-body {
       display: flex;
       flex-direction: column;
@@ -59,85 +60,61 @@
       font-size: 2rem;
       margin-bottom: .5rem;
       color: #1a202c;
-      overflow: visible;
-    }
-    .choices {                /* the visible “select” box */
-      position: relative;     /* create a new stacking context */
-      z-index: 1050;          /* big enough to sit above other inputs */
     }
 
-    /* let the actual dropdown list float absolutely */
-    .choices__list--dropdown { /* the open list */
-      position: absolute;     /* <— critical: must stay absolute */
-      z-index: 1100;          /* a bit higher so it sits on top */
+    /* Choices stacking */
+    .choices {
+      position: relative;
+      z-index: 1050;
+    }
+    .choices__list--dropdown {
+      position: absolute;
+      z-index: 1100;
     }
 
-    /* Make the slider’s track/thumb blue in modern browsers */
+    /* Slider styling */
     input[type="range"] {
-      accent-color: #0d6efd;   /* Bootstrap primary */
-    }
-
-    /* 1. Reset default appearance */
-    input[type="range"] {
+      accent-color: #0d6efd;
       -webkit-appearance: none;
-      -moz-appearance: none;
       appearance: none;
       width: 100%;
-      background: transparent; /* we'll style the track ourselves */
+      background: transparent;
       height: 8px;
-      /* declare our CSS var for the fill % */
       --pct: 0%;
     }
-
-    /* 2. WebKit track */
     input[type="range"]::-webkit-slider-runnable-track {
       height: 8px;
       border-radius: 4px;
       background: linear-gradient(
-          to right,
-          #0d6efd 0%, 
-          #0d6efd var(--pct), 
-          #dee2e6 var(--pct), 
-          #dee2e6 100%
+        to right,
+        #0d6efd 0%, #0d6efd var(--pct),
+        #dee2e6 var(--pct), #dee2e6 100%
       );
     }
-
-    /* 3. WebKit thumb */
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 16px; height: 16px;
       border-radius: 50%;
       background: #0d6efd;
-      margin-top: -4px; /* center thumb on 8px track */
+      margin-top: -4px;
     }
-
-    /* 4. Firefox track */
     input[type="range"]::-moz-range-track {
-      height: 8px;
-      border-radius: 4px;
+      height: 8px; border-radius: 4px;
       background: linear-gradient(
-          to right,
-          #0d6efd 0%, 
-          #0d6efd var(--pct), 
-          #dee2e6 var(--pct), 
-          #dee2e6 100%
+        to right,
+        #0d6efd 0%, #0d6efd var(--pct),
+        #dee2e6 var(--pct), #dee2e6 100%
       );
     }
-
-    /* 5. Firefox thumb */
     input[type="range"]::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #0d6efd;
+      width: 16px; height: 16px;
+      border-radius: 50%; background: #0d6efd;
       border: none;
     }
-    
   </style>
 </head>
 <body>
-      <!-- Toasts -->
+  <!-- Toast container -->
   <div class="toast-container position-fixed top-0 end-0 p-3"></div>
 
   <div class="container app-container">
@@ -148,5 +125,7 @@
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
   ></script>
+
+  {% block page_scripts %}{% endblock %}
 </body>
 </html>
