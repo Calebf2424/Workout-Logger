@@ -6,7 +6,7 @@
     .form-switch .form-check-input {
       width: 3rem;
       height: 1.6rem;
-      background-color: #0d6efd;  /* blue track default */
+      background-color: #ffffff; /* white track by default */
       border: 1px solid #0d6efd;
       border-radius: 1.6rem;
       position: relative;
@@ -16,12 +16,12 @@
       transition: background-color 0.25s ease-in-out;
     }
 
-    /* white track when checked */
+    /* blue track when checked */
     .form-switch .form-check-input:checked {
-      background-color: #ffffff;
+      background-color: #0d6efd;
     }
 
-    /* dot */
+    /* knob (blue by default) */
     .form-switch .form-check-input::after {
       content: "";
       position: absolute;
@@ -30,16 +30,15 @@
       width: 1.2rem;
       height: 1.2rem;
       border-radius: 50%;
-      background-color: #ffffff;  /* white dot by default */
+      background-color: #0d6efd;
       transition: left 0.25s ease-in-out, background-color 0.25s ease-in-out;
     }
 
-    /* blue dot when checked */
+    /* white knob when checked */
     .form-switch .form-check-input:checked::after {
       left: 1.6rem;
-      background-color: #0d6efd;
+      background-color: #ffffff;
     }
-
 
     /* Discard button hover‑invert */
     .btn-discard {
