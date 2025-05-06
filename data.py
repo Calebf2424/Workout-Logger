@@ -107,5 +107,3 @@ def register_custom_exercise(name, muscle, presaved_exercises):
 
     # Persist in DB
     insert_custom_exercise(name, muscle)
-
-

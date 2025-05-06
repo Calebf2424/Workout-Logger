@@ -135,5 +135,3 @@ def edit_set_route(set_id):
         date_param=date_param,
         settings=app_settings 
     )
-
-
