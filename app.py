@@ -8,6 +8,7 @@ app.secret_key = "added"
 
 create_sets_table()
 create_custom_exercise_table()
+clear_custom_exercises() 
 
 #home page
 @app.route("/")

@@ -126,3 +126,10 @@ def update_set(set_id, reps, weight, rpe):
     """, (reps, weight, rpe, set_id))
     conn.commit()
     conn.close()
+
+def clear_custom_exercises():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM custom_exercises")
+    conn.commit()
+    conn.close()
