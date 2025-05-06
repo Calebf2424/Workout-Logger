@@ -94,7 +94,7 @@ def settings():
     if request.method == "POST":
         app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
         app_settings["dark_mode"] = request.form.get("dark_mode") == "on"
-        return redirect(url_for("settings"))
+        return redirect(url_for("index"))
 
     return render_template("settings.html", settings=app_settings)
 
