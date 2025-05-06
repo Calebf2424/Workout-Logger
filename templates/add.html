@@ -1,141 +1,183 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% block title %}Add a Set – Workout Tracker{% endblock %}
 
-    <title>Add Workout</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            background-color: #f0f0f0;
-            text-align: center;
-        }
-        .form-container {
-            background-color: white;
-            padding: 20px 30px;
-            max-width: 400px;
-            margin: auto;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-container input,
-        .form-container button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-        }
-        .flash-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #c3e6cb;
-            border-radius: 5px;
-            width: 100%;
-            max-width: 400px;
-            margin: auto;
-            animation: fadeOut 1s ease-out 2s forwards;
-        }
+{% block content %}
+  <h1 class="text-white fw-bold mb-4">Add a Set</h1>
 
-        @keyframes fadeOut {
-            to {
-                opacity: 0;
-                visibility: hidden;
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-</head>
-<body class="text-center">
+  <div class="row justify-content-center w-100" style="max-width: 400px;">
+    <div class="col-12">
+      <div class="card home-card p-4">
 
-    <h1>Add a Set</h1>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="flash-message">
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    <div class="form-container">
-        <form action="/add-workout" method="POST">
-            <label for="exercise">Choose an exercise:</label><br>
-            <select id="exercise" name="exercise" required onchange="toggleCustomExercise(this.value)">
-              <option value="">-- Select an exercise --</option>
+        <form action="{{ url_for('add_workout') }}" method="POST">
+
+          <!-- 1) Exercise selector (searchable) -->
+          <div class="mb-4">
+            <label for="exercise" class="form-label fw-semibold">Exercise</label>
+            <select id="exercise" name="exercise"
+                    class="form-select"
+                    onchange="toggleCustomExercise(this.value)"
+                    required>
+              <option value="">Select exercise</option>
               <option value="__custom__">Custom Exercise</option>
               {% for e in exercises %}
                 <option value="{{ e.name }}">{{ e.name }}</option>
               {% endfor %}
-            </select><br>
-            
-            <div id="custom-fields" style="display: none;">
-              <label for="custom_name">Custom Name:</label>
-              <input type="text" name="custom_name" id="custom_name">
-            
-              <label for="custom_muscle">Muscle Group:</label>
-              <select name="custom_muscle" id="custom_muscle" required>
-                <option value="">-- Choose muscle group --</option>
+            </select>
+          </div>
+
+          <!-- 2) Reps steppers + editable -->
+          <div class="mb-4">
+            <label for="reps" class="form-label fw-semibold">Number of Reps</label>
+            <div class="d-flex justify-content-center">
+              <div class="input-group" style="width:100%; max-width:350px;">
+                <button type="button" class="btn btn-outline-primary"
+                        onclick="change('reps', -1)">−</button>
+                <input type="number" id="reps" name="reps"
+                       class="form-control text-center"
+                       value="5" min="1" max="20" step="1"
+                       onfocus="if(this.value==='5') this.value='';"
+                       oninput="clamp('reps')">
+                <button type="button" class="btn btn-outline-primary"
+                        onclick="change('reps', 1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3) Weight slider + inline editable pill -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Weight (lbs)</label>
+            <div class="d-flex align-items-center">
+              <!-- slider -->
+              <input type="range"
+                     id="weightRange"
+                     class="form-range flex-grow-1 me-2"
+                     min="0" max="1000" step="5" value="100"
+                     oninput="syncWeightFromSlider()">
+              <!-- inline number input styled as pill -->
+              <input type="number"
+                     id="weightInput"
+                     name="weight"
+                     class="form-control text-center"
+                     style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
+                     value="100" min="0" max="1000" step="5"
+                     onfocus="this.select()"
+                     oninput="syncWeightFromInput()">
+            </div>
+          </div>
+
+          <!-- 4) Custom‐exercise fields -->
+          <div id="custom-fields" class="mb-4" style="display: none;">
+            <div class="mb-3">
+              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+              <input type="text" id="custom_name" name="custom_name"
+                     class="form-control">
+            </div>
+            <div>
+              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+              <select id="custom_muscle" name="custom_muscle"
+                      class="form-select">
+                <option value="">Choose muscle group</option>
                 {% for m in muscle_groups %}
                   <option value="{{ m }}">{{ m }}</option>
                 {% endfor %}
-              </select>             
+              </select>
             </div>
-            
-            <label for="reps">Number of Reps:</label><br>
-            <input type="range" id="reps" name="reps" min="1" max="20" value="5" oninput="repsOutput.value = reps.value">
-            <output id="repsOutput">5</output><br>
+          </div>
 
-            <label for="weight">Weight(lbs):</label><br>
-            <input type="range" id="weight" name="weight" min="0" max="1000" step="5" value="100" oninput="weightOutput.value = weight.value">
-            <output id="weightOutput">100</output><br>
+          <!-- 5) Optional RPE steppers + editable -->
+          {% if settings.rpe_enabled %}
+            <div class="mb-4">
+              <label for="rpe" class="form-label fw-semibold">RPE</label>
+              <div class="d-flex justify-content-center">
+                <div class="input-group" style="width:100%; max-width:350px;">
+                  <button type="button" class="btn btn-outline-primary"
+                          onclick="changeFloat('rpe', -0.5)">−</button>
+                  <input type="number" id="rpe" name="rpe"
+                         class="form-control text-center"
+                         value="8" min="6" max="10" step="0.5"
+                         onfocus="if(this.value==='8') this.value='';"
+                         oninput="clamp('rpe')">
+                  <button type="button" class="btn btn-outline-primary"
+                          onclick="changeFloat('rpe', 0.5)">+</button>
+                </div>
+              </div>
+            </div>
+          {% endif %}
 
-            {% if settings.rpe_enabled %}
-            <label for="rpe">RPE:</label><br>
-            <input type="range" id="rpe" name="rpe" min="6" max="10" step="0.5" value="8" oninput="rpeOutput.value = rpe.value">
-            <output id="rpeOutput">8</output><br>
-            {% endif %}
-
-            <button type="submit">Submit</button>
+          <!-- 6) Submit button -->
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            Submit
+          </button>
         </form>
-    </div>
 
-    <div style="margin-top: 20px;">
-        <a href="/summary">
-            <button>End Workout</button>
+      </div>
+
+      <!-- 7) End Workout -->
+      <div class="text-center mt-3">
+        <a href="{{ url_for('summary') }}" class="btn btn-secondary">
+          End Workout
         </a>
+      </div>
+
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-    <script>
-        new Choices(document.getElementById('exercise'), {
-            searchEnabled: true,
-            shouldSort: false
-        });
-    </script>
-    <script>
-        function toggleCustomExercise(value) {
-          const customFields = document.getElementById("custom-fields");
-          if (value === "__custom__") {
-            customFields.style.display = "block";
-            document.getElementById("custom_name").required = true;
-            document.getElementById("custom_muscle").required = true;
-          } else {
-            customFields.style.display = "none";
-            document.getElementById("custom_name").required = false;
-            document.getElementById("custom_muscle").required = false;
-          }
-        }
-      </script>
-  <!-- Bootstrap JS bundle with Popper -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-    crossorigin="anonymous"
-  ></script>
-</body>
-</html>
+  </div>
+
+  <!-- page-specific scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new Choices(document.getElementById('exercise'), {
+        searchEnabled: true,
+        shouldSort: false
+      });
+    });
+
+    /* generic steppers and clamping */
+    function change(field, delta) {
+      const el = document.getElementById(field);
+      let val = parseFloat(el.value) || 0;
+      val = Math.min(el.max, Math.max(el.min, val + delta));
+      el.value = val;
+    }
+    function changeFloat(field, delta) {
+      change(field, delta);
+    }
+    function clamp(field) {
+      const el = document.getElementById(field);
+      let val = parseFloat(el.value);
+      if (isNaN(val) || val < el.min) val = el.min;
+      if (val > el.max)            val = el.max;
+      el.value = val;
+    }
+
+    /* two-way bind slider + input for weight */
+    function syncWeightFromSlider() {
+      const slider = document.getElementById('weightRange');
+      const input  = document.getElementById('weightInput');
+      input.value = slider.value;
+    }
+    function syncWeightFromInput() {
+      const slider = document.getElementById('weightRange');
+      const input  = document.getElementById('weightInput');
+      let   val    = parseInt(input.value);
+      if (isNaN(val)) val = slider.min;
+      val = Math.min(slider.max, Math.max(slider.min, val));
+      input.value  = val;
+      slider.value = val;
+    }
+
+    /* custom exercise toggler */
+    function toggleCustomExercise(value) {
+      const cf = document.getElementById('custom-fields');
+      if (value === '__custom__') {
+        cf.style.display = 'block';
+        document.getElementById('custom_name').required = true;
+        document.getElementById('custom_muscle').required = true;
+      } else {
+        cf.style.display = 'none';
+        document.getElementById('custom_name').required = false;
+        document.getElementById('custom_muscle').required = false;
+      }
+    }
+  </script>
+{% endblock %}
