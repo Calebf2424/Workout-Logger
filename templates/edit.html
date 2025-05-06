@@ -1,104 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% block title %}Edit Set – Workout Tracker{% endblock %}
 
-    <title>Edit Set</title>
+{% block content %}
+  <h1 class="text-white fw-bold mb-4">Edit Set</h1>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            background-color: #f0f0f0;
-            text-align: center;
-        }
-        .form-container {
-            background-color: white;
-            padding: 20px 30px;
-            max-width: 400px;
-            margin: auto;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-container input,
-        .form-container button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>Edit Set</h1>
-    <div class="form-container">
+  <div class="row justify-content-center w-100" style="max-width: 400px;">
+    <div class="col-12">
+      <div class="card home-card p-4">
+
         <form action="{{ url_for('edit_set_route', set_id=set_data[0]) }}" method="POST">
-            <!-- Preserve where we came from -->
-            <input type="hidden" name="origin" value="{{ origin }}">
-            {% if origin == 'history' %}
-                <input type="hidden" name="date" value="{{ date_param }}">
-            {% endif %}
+          <input type="hidden" name="origin" value="{{ origin }}">
+          {% if origin == 'history' %}
+            <input type="hidden" name="date" value="{{ date_param }}">
+          {% endif %}
 
-            <p><strong>Exercise:</strong> {{ set_data[1] }}</p>
+          <!-- 1) Locked Exercise Name -->
+          <div class="mb-4 text-center">
+            <label class="form-label fw-semibold">Exercise</label>
+            <div class="fs-5">{{ set_data[1] }}</div>
+          </div>
 
-            <label for="reps">Reps:</label>
-            <input
-                type="number"
-                name="reps"
-                id="reps"
-                min="1"
-                max="20"
-                value="{{ set_data[2] }}"
-                required
-            >
+          <!-- 2) Reps steppers + editable -->
+          <div class="mb-4">
+            <label for="reps" class="form-label fw-semibold">Number of Reps</label>
+            <div class="d-flex justify-content-center">
+              <div class="input-group" style="width:100%; max-width:350px;">
+                <button type="button" class="btn btn-outline-primary"
+                        onclick="change('reps', -1)">−</button>
+                <input type="number" id="reps" name="reps"
+                       class="form-control text-center"
+                       value="{{ set_data[2] }}" min="1" max="20" step="1"
+                       onfocus="this.select()"
+                       oninput="clamp('reps')">
+                <button type="button" class="btn btn-outline-primary"
+                        onclick="change('reps', 1)">+</button>
+              </div>
+            </div>
+          </div>
 
-            <label for="weight">Weight (lbs):</label>
-            <input
-                type="number"
-                name="weight"
-                id="weight"
-                min="0"
-                max="1000"
-                step="5"
-                value="{{ set_data[3] }}"
-                required
-            >
+          <!-- 3) Weight slider + inline editable pill -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Weight (lbs)</label>
+            <div class="d-flex align-items-center">
+              <input type="range"
+                     id="weightRange" name="weight"
+                     class="form-range flex-grow-1 me-2"
+                     min="0" max="1000" step="5"
+                     value="{{ set_data[3] }}"
+                     oninput="syncWeightFromSlider()">
+              <input type="number"
+                     id="weightInput"
+                     class="form-control text-center"
+                     style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
+                     value="{{ set_data[3] }}" min="0" max="1000" step="5"
+                     onfocus="this.select()"
+                     oninput="syncWeightFromInput()">
+            </div>
+          </div>
 
-            {% if settings.rpe_enabled %}
-                <label for="rpe">RPE (optional):</label>
-                <input
-                    type="number"
-                    name="rpe"
-                    id="rpe"
-                    min="6"
-                    max="10"
-                    step="0.5"
-                    value="{{ set_data[4] or '' }}"
-                >
-            {% endif %}
+          <!-- 4) Optional RPE steppers + editable -->
+          {% if settings.rpe_enabled %}
+            <div class="mb-4">
+              <label for="rpe" class="form-label fw-semibold">RPE</label>
+              <div class="d-flex justify-content-center">
+                <div class="input-group" style="width:100%; max-width:350px;">
+                  <button type="button" class="btn btn-outline-primary"
+                          onclick="changeFloat('rpe', -0.5)">−</button>
+                  <input type="number" id="rpe" name="rpe"
+                         class="form-control text-center"
+                         value="{{ set_data[4] if set_data[4] is not none else '' }}"
+                         min="6" max="10" step="0.5"
+                         onfocus="this.select()"
+                         oninput="clamp('rpe')">
+                  <button type="button" class="btn btn-outline-primary"
+                          onclick="changeFloat('rpe', 0.5)">+</button>
+                </div>
+              </div>
+            </div>
+          {% endif %}
 
-            <button type="submit">Save Changes</button>
+          <!-- 5) Save Changes -->
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            Save Changes
+          </button>
         </form>
 
-        <div style="margin-top: 20px;">
-            <a
-                href="{% if origin == 'history' %}
-                          {{ url_for('history', date=date_param) }}
-                       {% else %}
-                          {{ url_for('summary') }}
-                       {% endif %}"
-            >
-                <button>Cancel</button>
-            </a>
-        </div>
+      </div>
+
+      <!-- 6) Cancel -->
+      <div class="text-center mt-3">
+        <a
+          href="{% if origin == 'history' %}
+                   {{ url_for('history', date=date_param) }}
+                 {% else %}
+                   {{ url_for('summary') }}#exercises
+                 {% endif %}"
+          class="btn btn-secondary"
+        >
+          Cancel
+        </a>
+      </div>
     </div>
-  <!-- Bootstrap JS bundle with Popper -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-    crossorigin="anonymous"
-  ></script>
-</body>
-</html>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // initialize the weight slider fill
+      syncWeightFromSlider();
+    });
+
+    function change(field, delta) {
+      const el = document.getElementById(field);
+      let   val = parseFloat(el.value) || 0;
+      val = Math.min(el.max, Math.max(el.min, val + delta));
+      el.value = val;
+    }
+    function changeFloat(field, delta) {
+      change(field, delta);
+    }
+    function clamp(field) {
+      const el  = document.getElementById(field);
+      const raw = el.value.trim();
+      if (raw === '') return;
+      let val = parseFloat(raw);
+      if (isNaN(val) || val < el.min) val = el.min;
+      if (val > el.max)               val = el.max;
+      el.value = val;
+    }
+    function syncWeightFromSlider() {
+      const slider = document.getElementById('weightRange');
+      const input  = document.getElementById('weightInput');
+      const val    = parseInt(slider.value, 10);
+      input.value = val;
+      // update track fill
+      const pct = (val - slider.min) / (slider.max - slider.min) * 100;
+      slider.style.setProperty('--pct', pct + '%');
+    }
+    function syncWeightFromInput() {
+      const slider = document.getElementById('weightRange');
+      let   val    = parseInt(document.getElementById('weightInput').value, 10);
+      if (isNaN(val)) val = slider.min;
+      val = Math.min(slider.max, Math.max(slider.min, val));
+      document.getElementById('weightInput').value = val;
+      slider.value = val;
+      syncWeightFromSlider();
+    }
+  </script>
+{% endblock %}
