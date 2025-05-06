@@ -23,19 +23,23 @@
           </button>
         </div>
 
-        <!-- Summary Content -->
+        <!-- SUMMARY TAB -->
         <div id="summaryTab">
+          {% set total_sets = muscle_counts.values() | sum %}
+          {% set rpe_list = sets | map(attribute=4) | select | list %}
+
           <!-- Stats Row -->
           <div class="d-flex justify-content-between mb-3">
             <div class="text-center flex-fill">
               <small class="text-muted">Total Sets</small>
-              <div class="fs-5 fw-semibold">{{ muscle_counts.values() | sum }}</div>
+              <div class="fs-5 fw-semibold">{{ total_sets }}</div>
             </div>
-            {% if settings.rpe_enabled %}
+
+            {% if settings.rpe_enabled and rpe_list %}
             <div class="text-center flex-fill">
               <small class="text-muted">Avg RPE</small>
               <div class="fs-5 fw-semibold">
-                {{ ('%.1f' % (sets | map(attribute=4) | select | list | sum / (sets|length))) }}
+                {{ (rpe_list | sum / (rpe_list | length)) | round(1) }}
               </div>
             </div>
             {% endif %}
@@ -45,14 +49,17 @@
           <canvas id="muscleChart" height="200"></canvas>
         </div>
 
-        <!-- Exercises Content -->
+        <!-- EXERCISES TAB -->
         <div id="exercisesTab" style="display:none;">
           <ul class="list-group mb-3">
             {% for s in sets %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
               <div>
                 <div class="fw-semibold">{{ s[1] }}</div>
-                <small class="text-muted">{{ s[2] }} reps &bull; {{ s[3] }} lbs{% if settings.rpe_enabled %} &bull; RPE {{ s[4] }}{% endif %}</small>
+                <small class="text-muted">
+                  {{ s[2] }} reps &bull; {{ s[3] }} lbs
+                  {% if settings.rpe_enabled and s[4] is not none %}&bull; RPE {{ s[4] }}{% endif %}
+                </small>
               </div>
               <div class="btn-group btn-group-sm">
                 <a href="{{ url_for('edit_set_route', set_id=s[0], origin='summary') }}"
@@ -87,15 +94,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
   <script>
     function showTab(tab) {
-      document.getElementById('summaryTab').style.display = tab==='summary' ? 'block' : 'none';
-      document.getElementById('exercisesTab').style.display = tab==='exercises' ? 'block' : 'none';
-      document.getElementById('tab-summary').classList.toggle('active', tab==='summary');
-      document.getElementById('tab-exercises').classList.toggle('active', tab==='exercises');
+      document.getElementById('summaryTab').style.display   = tab === 'summary'   ? 'block' : 'none';
+      document.getElementById('exercisesTab').style.display = tab === 'exercises' ? 'block' : 'none';
+      document.getElementById('tab-summary').classList.toggle('active',   tab === 'summary');
+      document.getElementById('tab-exercises').classList.toggle('active', tab === 'exercises');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       // Prepare chart data
-      const labels = {{ muscle_counts.keys() | list | tojson }};
+      const labels = {{ muscle_counts.keys()   | list | tojson }};
       const data   = {{ muscle_counts.values() | list | tojson }};
       const ctx    = document.getElementById('muscleChart').getContext('2d');
 
