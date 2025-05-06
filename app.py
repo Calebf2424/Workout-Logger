@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
-from datetime import date
+from datetime import date, datetime, timedelta
 from database import *
 from data import *
 
@@ -42,9 +42,10 @@ def add_workout():
     )
     return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=app_settings)
 
-#view past workouts by chosen date
+#history
 @app.route("/history", methods=["GET", "POST"])
 def history():
+    # Determine chosen_date from POST (form) or GET (query param)
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
@@ -53,8 +54,25 @@ def history():
     if chosen_date:
         sets = get_specific_day(chosen_date)
         muscle_counts = summarize_muscles(sets)
-        return render_template("history.html", sets=sets, chosen_date=chosen_date, muscle_counts=muscle_counts, settings=app_settings)
 
+        dt = date.fromisoformat(chosen_date)
+        prev_date = (dt - timedelta(days=1)).isoformat()
+        next_date = (dt + timedelta(days=1)).isoformat()
+
+        display_date = f"{dt.strftime('%B')} {dt.day}, {dt.year}"
+
+        return render_template(
+            "history.html",
+            sets=sets,
+            chosen_date=chosen_date,
+            prev_date=prev_date,
+            next_date=next_date,
+            display_date=display_date,
+            muscle_counts=muscle_counts,
+            settings=app_settings
+        )
+
+    # No date chosen yet
     return render_template("history.html", sets=None, chosen_date=None)
 
 #to be added later, shows progress in certain exercises
@@ -68,7 +86,7 @@ def summary():
     today = date.today().isoformat()
     sets = get_specific_day(today)
     muscle_counts = summarize_muscles(sets)
-
+    
     return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts, settings=app_settings)
 
 @app.route("/settings", methods=["GET", "POST"])
