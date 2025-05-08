@@ -291,6 +291,13 @@ def create_routine():
                 flash(f"Routine “{name}” saved!", "success")
                 session.pop("new_routine", None)
             return redirect(url_for("premade"))
+        elif action == "discard":
+            if "new_routine" in session:
+                rid = session["new_routine"]["id"]
+                delete_routine(rid)  # <- remove routine + sets
+                session.pop("new_routine", None)
+            flash("Routine discarded.", "danger")
+            return redirect(url_for("premade"))
 
     # 2) On GET, or after POST redirect, show form plus any already-added sets
     current = session.get("new_routine")
@@ -299,9 +306,13 @@ def create_routine():
         current_sets = get_sets_for_routine(current["id"])
 
     return render_template(
-        "create_routine.html",
-        exercises=all_exercises,
-        current_routine=current,
-        current_sets=current_sets,
-        settings=app_settings
+                            "create_routine.html",
+                            exercises=all_exercises,
+                            muscle_groups=sorted(
+                                set(e["muscle"] for e in all_exercises),
+                                key=lambda m: preferred_order.index(m) if m in preferred_order else float('inf')
+                            ),
+                            current_routine=current,
+                            current_sets=current_sets,
+                            settings=app_settings
     )
