@@ -227,30 +227,3 @@ def update_routine_set_position(set_id, position):
     """, (position, set_id))
     conn.commit()
     conn.close()
-
-def delete_routine_set_by_id(set_id: int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("DELETE FROM routine_sets WHERE id = ?", (set_id,))
-    conn.commit()
-    conn.close()
-
-def update_routine_name(routine_id: int, new_name: str):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-        UPDATE planned_routines
-        SET name = ?
-        WHERE id = ?
-    """, (new_name, routine_id))
-    conn.commit()
-    conn.close()
-
-def get_routine_by_id(routine_id: int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, name FROM planned_routines WHERE id = ?", (routine_id,))
-    row = c.fetchone()
-    conn.close()
-    return {"id": row[0], "name": row[1]} if row else None
-
