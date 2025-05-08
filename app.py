@@ -78,11 +78,6 @@ def history():
     # No date chosen yet
     return render_template("history.html", sets=None, chosen_date=None)
 
-#to be added later, shows progress in certain exercises
-@app.route("/progress")
-def progress():
-    return render_template("progress.html")
-
 #summary of workout for the day when choosing to end the workout
 @app.route("/summary")
 def summary():
@@ -381,3 +376,23 @@ def preview_routine(routine_id):
         routine_id=routine_id,
         muscle_counts=muscle_counts
     )
+
+@app.route("/skip-set", methods=["POST"])
+def skip_set():
+    action = request.form.get("action")
+    routine = session.get("active_routine")
+
+    if not routine:
+        flash("No active workout.")
+        return redirect(url_for("premade"))
+
+    idx = routine["current_index"]
+    skipped = routine["sets"][idx]
+
+    if action == "skip_later":
+        routine["sets"].append(skipped)  # move to end
+    # In either case, move forward
+    routine["current_index"] += 1
+
+    session["active_routine"] = routine
+    return redirect(url_for("workout_mode"))
