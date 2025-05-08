@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Workout Mode – {{ exercise }}{% endblock %}
+
+{% block content %}
+  <div class="home-card mb-4" style="max-width: 400px; width: 100%;">
+    <div class="card-body text-center">
+      <h5 class="card-title mb-3">
+        {{ exercise }}<br>
+        <small>Set {{ index }} of {{ total }}</small>
+      </h5>
+      <form method="POST" action="{{ url_for('complete_set') }}" class="w-100">
+        <div class="mb-3 text-start">
+          <label for="reps" class="form-label">Reps</label>
+          <input
+            type="number"
+            class="form-control"
+            id="reps"
+            name="reps"
+            min="1"
+            required
+          >
+        </div>
+        <div class="mb-3 text-start">
+          <label for="weight" class="form-label">Weight</label>
+          <input
+            type="number"
+            step="any"
+            class="form-control"
+            id="weight"
+            name="weight"
+            min="0"
+            required
+          >
+        </div>
+        {% if settings.rpe_enabled %}
+        <div class="mb-3 text-start">
+          <label for="rpe" class="form-label">RPE</label>
+          <input
+            type="number"
+            step="0.5"
+            class="form-control"
+            id="rpe"
+            name="rpe"
+            min="1"
+            max="10"
+          >
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-success btn-lg w-100">
+          ✅ Complete
+        </button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

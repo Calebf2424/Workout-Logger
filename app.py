@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash # type: ignore
+from flask import Flask, render_template, request, redirect, url_for, flash, session # type: ignore
 from datetime import date, datetime, timedelta
 from database import *
 from data import *
@@ -9,6 +9,8 @@ app.secret_key = "added"
 create_sets_table()
 create_custom_exercise_table()
 clear_custom_exercises() 
+create_planned_routines_table()
+create_routine_sets_table()
 
 #home page
 @app.route("/")
@@ -157,5 +159,149 @@ def edit_set_route(set_id):
         set_data=set_data,
         origin=origin,
         date_param=date_param,
+        settings=app_settings
+    )
+
+#premade workout routes
+#everything below for premade routines
+#landing page
+@app.route("/premade", methods=["GET", "POST"])
+def premade():
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "create":
+            return redirect(url_for("create_routine"))
+        elif action.startswith("start_"):
+            routine_id = int(action.replace("start_", ""))
+            return redirect(url_for("start_routine", routine_id=routine_id))
+        elif action.startswith("edit_"):
+            routine_id = int(action.replace("edit_", ""))
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+        elif action.startswith("delete_"):
+            routine_id = int(action.replace("delete_", ""))
+            delete_routine(routine_id)
+            return redirect(url_for("premade"))
+        
+    routines = get_all_routines()
+    return render_template("premade.html", routines=routines)
+
+#start
+@app.route("/start-routine/<int:routine_id>")
+def start_routine(routine_id):
+    sets_data = get_sets_for_routine(routine_id)
+
+    workout_queue = []
+    for row in sets_data:
+        for i in range(row["sets"]):
+            workout_queue.append({
+                "exercise": row["exercise"],
+                "set_number": i + 1
+            })
+    session["active_routine"] = {
+        "routine_id": routine_id,
+        "sets": workout_queue,
+        "current_index": 0
+    }
+
+    return redirect(url_for("workout_mode"))
+
+@app.route("/workout-mode", methods=["GET"])
+def workout_mode():
+    routine = session.get("active_routine")
+    if not routine:
+        flash("No active workout")
+        return redirect(url_for("premade"))
+    
+    sets = routine["sets"]
+    index = routine["current_index"]
+
+    #check if workout is finished
+    if index >= len(sets):
+        flash("Workout complete!")
+        session.pop("active_routine", None)
+        return redirect(url_for("summary"))
+    
+    current_set = sets[index]
+    exercise = current_set["exercise"]
+    set_number = current_set["set_number"]
+
+    return render_template("workout_mode.html",
+                           exercise=exercise,
+                           set_number=set_number,
+                           index=index + 1,  # for 1-based display
+                           total=len(sets),
+                           settings=app_settings)
+
+@app.route("/complete-set", methods=["POST"])
+def complete_set():
+    routine = session.get("active_routine")
+    if not routine:
+        flash("No active workout.")
+        return redirect(url_for("premade"))
+
+    idx = routine["current_index"]
+    current = routine["sets"][idx]
+
+    exercise = current["exercise"]
+    reps     = int(request.form["reps"])
+    weight   = float(request.form["weight"])
+    rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
+
+    log_date = date.today().isoformat()
+    insert_set(exercise, reps, weight, rpe, log_date, None)
+
+    routine["current_index"] = idx + 1
+    session["active_routine"] = routine
+
+    return redirect(url_for("workout_mode"))
+
+@app.route("/create-routine", methods=["GET", "POST"])
+def create_routine():
+    # 1) Combine presets + custom
+    all_exercises = presaved_exercises + get_all_custom_exercises()
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        # — Add one exercise to the new routine —
+        if action == "add":
+            # If routine not yet created, create it
+            if "new_routine" not in session:
+                name = request.form.get("routine_name", "").strip()
+                if not name:
+                    flash("Give your routine a name first!", "danger")
+                    return redirect(url_for("create_routine"))
+                rid = insert_routine(name)
+                session["new_routine"] = {"id": rid, "name": name}
+
+            # Insert the selected exercise + set count
+            rid = session["new_routine"]["id"]
+            exercise  = request.form.get("exercise")
+            sets_count = int(request.form.get("sets", 1))
+            insert_routine_set(rid, exercise, sets_count)
+
+            flash(f"Added {sets_count}× {exercise}", "success")
+            return redirect(url_for("create_routine"))
+
+        # — Save and finish the routine —
+        elif action == "save":
+            if "new_routine" in session:
+                name = session["new_routine"]["name"]
+                flash(f"Routine “{name}” saved!", "success")
+                session.pop("new_routine", None)
+            return redirect(url_for("premade"))
+
+    # 2) On GET, or after POST redirect, show form plus any already-added sets
+    current = session.get("new_routine")
+    current_sets = []
+    if current:
+        current_sets = get_sets_for_routine(current["id"])
+
+    return render_template(
+        "create_routine.html",
+        exercises=all_exercises,
+        current_routine=current,
+        current_sets=current_sets,
         settings=app_settings
     )

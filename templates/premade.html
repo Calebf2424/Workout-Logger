@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Premade Workouts{% endblock %}
+
+{% block content %}
+  <h2 class="text-white fw-bold mb-4">Premade Workouts</h2>
+
+  <div class="w-100" style="max-width: 400px;">
+
+    <!-- Routine Cards -->
+    {% for r in routines %}
+      <div class="home-card mb-3 px-3 py-3">
+        <form method="POST" class="d-flex align-items-center justify-content-between">
+          <!-- Start the workout (entire left area clickable) -->
+            <button
+                type="submit"
+                name="action"
+                value="start_{{ r.id }}"
+                class="btn btn-link text-start text-dark text-decoration-none flex-grow-1 ms-2"
+                style="font-size: 1.4rem;"
+                >
+                {{ r.name }}
+            </button>
+
+          <!-- Edit & Delete icons -->
+          <div class="d-flex align-items-center">
+            <button type="submit"
+                    name="action"
+                    value="edit_{{ r.id }}"
+                    class="btn btn-sm btn-link text-dark me-2 p-0"
+                    aria-label="Edit">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button type="submit"
+                    name="action"
+                    value="delete_{{ r.id }}"
+                    class="btn btn-sm btn-link text-danger p-0"
+                    aria-label="Delete">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    {% endfor %}
+
+    <!-- Add New Routine Card -->
+    <div class="home-card mb-3 px-2 py-1">
+      <form method="POST" class="d-flex align-items-center justify-content-center">
+        <button
+          type="submit"
+          name="action"
+          value="create"
+          class="btn btn-link text-dark fw-semibold text-decoration-none d-flex align-items-center"
+          style="font-size: 1.1rem;"
+        >
+          <i class="bi bi-plus-lg me-2"></i> Add New Routine
+        </button>
+      </form>
+    </div>
+
+    <!-- Home Button -->
+    <div class="text-center mt-3">
+      <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+        <i class="bi bi-house-fill me-1"></i> Home
+      </a>
+    </div>
+
+  </div>
+{% endblock %}

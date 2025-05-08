@@ -133,3 +133,80 @@ def clear_custom_exercises():
     c.execute("DELETE FROM custom_exercises")
     conn.commit()
     conn.close()
+
+#routines 
+def create_planned_routines_table():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS planned_routines (
+        id    INTEGER PRIMARY KEY AUTOINCREMENT,
+        name  TEXT    NOT NULL
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+def create_routine_sets_table():
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS routine_sets (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        routine_id  INTEGER NOT NULL,
+        exercise    TEXT    NOT NULL,
+        sets        INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY(routine_id) REFERENCES planned_routines(id) ON DELETE CASCADE
+    )
+    """)
+    conn.commit()
+    conn.close()
+
+def insert_routine(name: str) -> int:
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("INSERT INTO planned_routines (name) VALUES (?)", (name,))
+    routine_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    return routine_id
+
+def insert_routine_set(routine_id: int, exercise: str, sets: int = 1):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute(
+        "INSERT INTO routine_sets (routine_id, exercise, sets) VALUES (?, ?, ?)",
+        (routine_id, exercise, sets)
+    )
+    conn.commit()
+    conn.close()
+
+def get_all_routines() -> list[dict]:
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT id, name FROM planned_routines ORDER BY name")
+    rows = c.fetchall()
+    conn.close()
+    return [{"id": r[0], "name": r[1]} for r in rows]
+
+def get_sets_for_routine(routine_id: int) -> list[dict]:
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+    SELECT exercise, sets
+      FROM routine_sets
+     WHERE routine_id = ?
+     ORDER BY id
+    """, (routine_id,))
+    rows = c.fetchall()
+    conn.close()
+    return [{"exercise": row[0], "sets": row[1]} for row in rows]
+
+def delete_routine(routine_id: int):
+    conn = get_connection()
+    c = conn.cursor()
+    # Remove template sets first (CASCADE would do it, but explicit is safe)
+    c.execute("DELETE FROM routine_sets WHERE routine_id = ?", (routine_id,))
+    c.execute("DELETE FROM planned_routines WHERE id = ?", (routine_id,))
+    conn.commit()
+    conn.close()   
