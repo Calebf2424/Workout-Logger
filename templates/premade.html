@@ -47,7 +47,8 @@
                         name="action"
                         value="delete_{{ r.id }}"
                         class="btn btn-sm btn-link text-danger p-0"
-                        aria-label="Delete">
+                        aria-label="Delete"
+                        onclick="return confirm('Are you sure you want to delete the routine: {{ r.name }}?');">
                   <i class="bi bi-trash-fill"></i>
                 </button>
               </div>              

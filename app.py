@@ -220,13 +220,18 @@ def workout_mode():
     current_set = sets[index]
     exercise = current_set["exercise"]
     set_number = current_set["set_number"]
+    next_exercise = None
+    if index < len(sets) - 1:
+        next_exercise = sets[index + 1]["exercise"]
+
 
     return render_template("workout_mode.html",
-                           exercise=exercise,
-                           set_number=set_number,
-                           index=index + 1,  # for 1-based display
-                           total=len(sets),
-                           settings=app_settings)
+                       exercise=exercise,
+                       set_number=set_number,
+                       index=index + 1,
+                       total=len(sets),
+                       next_exercise=next_exercise,
+                       settings=app_settings)
 
 @app.route("/complete-set", methods=["POST"])
 def complete_set():
@@ -395,4 +400,5 @@ def skip_set():
     routine["current_index"] += 1
 
     session["active_routine"] = routine
+    
     return redirect(url_for("workout_mode"))

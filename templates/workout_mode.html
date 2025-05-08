@@ -2,7 +2,24 @@
 {% block title %}Current Set – Workout Tracker{% endblock %}
 
 {% block content %}
-  <h1 class="text-white fw-bold mb-4 text-center">{{ exercise }}</h1>
+<h1 class="text-white fw-bold display-1 mb-2 text-center">{{ exercise }}</h1>
+
+  <!-- Progress Bar -->
+  <div class="mb-4 w-100">
+    <div class="d-flex justify-content-between mb-1">
+      <small class="text-white fw-semibold">Progress</small>
+      <small class="text-white">{{ index }}/{{ total }}</small>
+    </div>
+    <div class="progress" style="height: 1rem; width: 100%;">
+      <div class="progress-bar bg-success"
+          role="progressbar"
+          style="width: {{ (index / total * 100) | round(0, 'floor') }}%;"
+          aria-valuenow="{{ index }}"
+          aria-valuemin="0"
+          aria-valuemax="{{ total }}">
+      </div>
+    </div>
+  </div>
 
   <div class="row justify-content-center w-100" style="max-width: 400px;">
     <div class="col-12">
@@ -61,11 +78,15 @@
         </form>
 
         <form action="{{ url_for('skip_set') }}" method="POST" class="d-grid gap-2 mt-3">
-          <button name="action" value="skip_later" class="btn btn-outline-secondary w-100">⏭️ Skip for Now</button>
-          <button name="action" value="skip_today" class="btn btn-outline-danger w-100">❌ Skip for Today</button>
+          <button name="action" value="skip_later" class="btn btn-secondary w-100">⏭️ Skip for Now</button>
+          <button name="action" value="skip_today" class="btn btn-danger w-100">❌ Skip for Today</button>
         </form>
-
       </div>
+      {% if next_exercise %}
+        <p class="text-center text-white mt-4 fs-5">
+          <i class="bi bi-arrow-down-circle me-1"></i> Up next: <strong>{{ next_exercise }}</strong>
+        </p>
+      {% endif %}
     </div>
   </div>
 {% endblock %}
