@@ -2,7 +2,13 @@
 {% block title %}Create Routine – Workout Tracker{% endblock %}
 
 {% block content %}
-  <h1 class="text-white fw-bold mb-4">Create Routine</h1>
+  <h1 class="text-white fw-bold mb-4">
+    {% if current_routine %}
+      {{ current_routine.name }}
+    {% else %}
+      Create Routine
+    {% endif %}
+  </h1>
 
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -31,79 +37,97 @@
     <div class="col-12">
       <div class="card home-card p-4">
         <form method="POST" action="{{ url_for('create_routine') }}">
-          <!-- Routine Name (only on first render) -->
+          <!-- Routine Name: Only show if not created yet -->
           {% if not current_routine %}
-          <div class="mb-4">
-            <label for="routine_name" class="form-label fw-semibold">Routine Name</label>
-            <input type="text" id="routine_name" name="routine_name" class="form-control" placeholder="e.g. Push Day" required>
-          </div>
-          {% endif %}
-
-          <!-- Exercise selector -->
-          <div class="mb-4">
-            <label for="exercise" class="form-label fw-semibold">Exercise</label>
-            <select id="exercise" name="exercise" data-choices
-                    class="form-select"
-                    onchange="toggleCustomExercise(this.value)"
-                    required>
-              <option value="">Select exercise</option>
-              <option value="__custom__">Custom Exercise</option>
-              {% for e in exercises %}
-                <option value="{{ e.name }}">{{ e.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- Custom Exercise fields -->
-          <div id="custom-fields" class="mb-4" style="display: none;">
-            <div class="mb-3">
-              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
-              <input type="text" id="custom_name" name="custom_name" class="form-control">
+            <div class="mb-4">
+              <label for="routine_name" class="form-label fw-semibold">Routine Name</label>
+              <input type="text" id="routine_name" name="routine_name" class="form-control" placeholder="e.g. Push Day" required>
             </div>
-            <div>
-              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
-              <select id="custom_muscle" name="custom_muscle" class="form-select">
-                <option value="">Choose muscle group</option>
-                {% for m in muscle_groups %}
-                  <option value="{{ m }}">{{ m }}</option>
+
+            <button type="submit" name="action" value="add" class="btn btn-primary w-100 py-2">
+              ➕ Create Routine
+            </button>
+          {% else %}
+            <!-- Exercise selector -->
+            <div class="mb-4">
+              <label for="exercise" class="form-label fw-semibold">Exercise</label>
+              <select id="exercise" name="exercise" data-choices
+                      class="form-select"
+                      onchange="toggleCustomExercise(this.value)"
+                      required>
+                <option value="">Select exercise</option>
+                <option value="__custom__">Custom Exercise</option>
+                {% for e in exercises %}
+                  <option value="{{ e.name }}">{{ e.name }}</option>
                 {% endfor %}
               </select>
             </div>
-          </div>
 
-          <!-- Submit -->
-          <div class="d-flex">
+            <!-- Custom Exercise fields -->
+            <div id="custom-fields" class="mb-4" style="display: none;">
+              <div class="mb-3">
+                <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+                <input type="text" id="custom_name" name="custom_name" class="form-control">
+              </div>
+              <div>
+                <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+                <select id="custom_muscle" name="custom_muscle" class="form-select">
+                  <option value="">Choose muscle group</option>
+                  {% for m in muscle_groups %}
+                    <option value="{{ m }}">{{ m }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <!-- Sets input with + / - -->
+            <div class="mb-4">
+              <label for="sets" class="form-label fw-semibold">Number of Sets</label>
+              <div class="input-group" style="max-width: 350px; margin: 0 auto;">
+                <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
+                <input type="number" id="sets" name="sets"
+                       class="form-control text-center"
+                       value="3" min="1" max="20" step="1"
+                       onfocus="if(this.value==='3') this.value='';"
+                       oninput="clamp('sets')">
+                <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
+              </div>
+            </div>
+
             <button type="submit" name="action" value="add" class="btn btn-primary w-100 py-2">
               ➕ Add to Routine
             </button>
-          </div>
+          {% endif %}
         </form>
       </div>
 
-      {% if current_sets %}
-        <div class="mt-4">
-          <h5 class="text-white mb-2">Current Exercises</h5>
-          <ul class="list-group">
-            {% for item in current_sets %}
-              <li class="list-group-item d-flex justify-content-between">
-                {{ item.exercise }}
-                <span>{{ item.sets }}×</span>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
+      {% if current_routine %}
+        {% if current_sets %}
+          <div class="mt-4">
+            <h5 class="text-white mb-2">Current Exercises</h5>
+            <ul class="list-group">
+              {% for item in current_sets %}
+                <li class="list-group-item d-flex justify-content-between">
+                  {{ item.exercise }}
+                  <span>{{ item.sets }}×</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
 
-        <form method="POST" class="mt-3">
-          <button type="submit" name="action" value="save" class="btn btn-success w-100">
-            💾 Save Routine
+          <form method="POST" class="mt-3">
+            <button type="submit" name="action" value="save" class="btn btn-success w-100">
+              💾 Save Routine
+            </button>
+          </form>
+        {% endif %}
+
+        <!-- Always show discard -->
+        <form method="POST" onsubmit="return confirmDiscard();" class="mt-2">
+          <button type="submit" name="action" value="discard" class="btn btn-danger w-100">
+            🗑️ Discard Routine
           </button>
         </form>
-
-        <form method="POST" onsubmit="return confirmDiscard();" class="mt-2">
-            <button type="submit" name="action" value="discard" class="btn btn-danger w-100">
-              🗑️ Discard Routine
-            </button>
-          </form>          
       {% endif %}
     </div>
   </div>
@@ -135,9 +159,24 @@
         document.getElementById('custom_muscle').required = false;
       }
     }
-  </script>
 
-  <script>
+    function change(field, delta) {
+      const el = document.getElementById(field);
+      let val = parseInt(el.value) || 0;
+      val = Math.min(el.max, Math.max(el.min, val + delta));
+      el.value = val;
+    }
+
+    function clamp(field) {
+      const el  = document.getElementById(field);
+      const raw = el.value.trim();
+      if (raw === '') return;
+      let val = parseInt(raw);
+      if (isNaN(val) || val < el.min) val = el.min;
+      if (val > el.max)               val = el.max;
+      el.value = val;
+    }
+
     function confirmDiscard() {
       return confirm("Are you sure you want to discard this routine?\nAll progress will be lost.");
     }

@@ -209,4 +209,4 @@ def delete_routine(routine_id: int):
     c.execute("DELETE FROM routine_sets WHERE routine_id = ?", (routine_id,))
     c.execute("DELETE FROM planned_routines WHERE id = ?", (routine_id,))
     conn.commit()
-    conn.close()   
+    conn.close()

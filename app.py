@@ -258,61 +258,96 @@ def complete_set():
 
 @app.route("/create-routine", methods=["GET", "POST"])
 def create_routine():
-    # 1) Combine presets + custom
     all_exercises = presaved_exercises + get_all_custom_exercises()
 
     if request.method == "POST":
         action = request.form.get("action")
 
-        # — Add one exercise to the new routine —
+        # STEP 1 — Create the routine
         if action == "add":
-            # If routine not yet created, create it
             if "new_routine" not in session:
                 name = request.form.get("routine_name", "").strip()
                 if not name:
                     flash("Give your routine a name first!", "danger")
                     return redirect(url_for("create_routine"))
+
                 rid = insert_routine(name)
                 session["new_routine"] = {"id": rid, "name": name}
+                flash(f"Routine '{name}' created!", "success")
+                return redirect(url_for("create_routine"))
 
-            # Insert the selected exercise + set count
+            # STEP 2 — Add an exercise to the routine
             rid = session["new_routine"]["id"]
-            exercise  = request.form.get("exercise")
+            exercise = request.form.get("exercise")
+
+            if not exercise:
+                flash("Please select an exercise.", "danger")
+                return redirect(url_for("create_routine"))
+
+            # Custom exercise handling
+            if exercise == "__custom__":
+                custom_name = request.form.get("custom_name", "").strip()
+                custom_muscle = request.form.get("custom_muscle", "").strip()
+
+                if not custom_name or not custom_muscle:
+                    flash("Please fill in both name and muscle group for custom exercise.", "danger")
+                    return redirect(url_for("create_routine"))
+
+                register_custom_exercise(custom_name, custom_muscle, presaved_exercises)
+                exercise = custom_name
+
+            # Sets count
             sets_count = int(request.form.get("sets", 1))
             insert_routine_set(rid, exercise, sets_count)
-
             flash(f"Added {sets_count}× {exercise}", "success")
             return redirect(url_for("create_routine"))
 
-        # — Save and finish the routine —
+        # Save the routine
         elif action == "save":
             if "new_routine" in session:
                 name = session["new_routine"]["name"]
                 flash(f"Routine “{name}” saved!", "success")
                 session.pop("new_routine", None)
             return redirect(url_for("premade"))
+
+        # Discard routine and delete from DB
         elif action == "discard":
             if "new_routine" in session:
                 rid = session["new_routine"]["id"]
-                delete_routine(rid)  # <- remove routine + sets
+                delete_routine(rid)
                 session.pop("new_routine", None)
             flash("Routine discarded.", "danger")
             return redirect(url_for("premade"))
 
-    # 2) On GET, or after POST redirect, show form plus any already-added sets
+    # GET method — show the form
     current = session.get("new_routine")
     current_sets = []
     if current:
         current_sets = get_sets_for_routine(current["id"])
 
-    return render_template(
-                            "create_routine.html",
-                            exercises=all_exercises,
-                            muscle_groups=sorted(
-                                set(e["muscle"] for e in all_exercises),
-                                key=lambda m: preferred_order.index(m) if m in preferred_order else float('inf')
-                            ),
-                            current_routine=current,
-                            current_sets=current_sets,
-                            settings=app_settings
+    # Pass muscle group options for custom selector
+    muscle_groups = sorted(
+        set(e["muscle"] for e in all_exercises),
+        key=lambda m: preferred_order.index(m) if m in preferred_order else float('inf')
     )
+
+    return render_template(
+        "create_routine.html",
+        exercises=all_exercises,
+        muscle_groups=muscle_groups,
+        current_routine=current,
+        current_sets=current_sets,
+        settings=app_settings
+    )
+
+@app.route("/reorder-routine-sets", methods=["POST"])
+def reorder_routine_sets():
+    order = request.form.get("order", "")
+    ids = [int(x) for x in order.split(",") if x.strip().isdigit()]
+
+    # Set new position field in DB (you’d add a `position` column to `routine_sets`)
+    for index, set_id in enumerate(ids):
+        update_routine_set_position(set_id, index)
+
+    flash("Routine order updated!", "success")
+    return redirect(url_for("create_routine"))
