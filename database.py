@@ -156,6 +156,7 @@ def create_routine_sets_table():
         routine_id  INTEGER NOT NULL,
         exercise    TEXT    NOT NULL,
         sets        INTEGER NOT NULL DEFAULT 1,
+        position    INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY(routine_id) REFERENCES planned_routines(id) ON DELETE CASCADE
     )
     """)
@@ -174,9 +175,15 @@ def insert_routine(name: str) -> int:
 def insert_routine_set(routine_id: int, exercise: str, sets: int = 1):
     conn = get_connection()
     c = conn.cursor()
+
+    # Get current max position for that routine
+    c.execute("SELECT MAX(position) FROM routine_sets WHERE routine_id = ?", (routine_id,))
+    max_pos = c.fetchone()[0]
+    next_pos = (max_pos + 1) if max_pos is not None else 0
+
     c.execute(
-        "INSERT INTO routine_sets (routine_id, exercise, sets) VALUES (?, ?, ?)",
-        (routine_id, exercise, sets)
+        "INSERT INTO routine_sets (routine_id, exercise, sets, position) VALUES (?, ?, ?, ?)",
+        (routine_id, exercise, sets, next_pos)
     )
     conn.commit()
     conn.close()
@@ -189,18 +196,17 @@ def get_all_routines() -> list[dict]:
     conn.close()
     return [{"id": r[0], "name": r[1]} for r in rows]
 
-def get_sets_for_routine(routine_id: int) -> list[dict]:
+def get_sets_for_routine(routine_id):
     conn = get_connection()
     c = conn.cursor()
     c.execute("""
-    SELECT exercise, sets
-      FROM routine_sets
-     WHERE routine_id = ?
-     ORDER BY id
+        SELECT id, exercise, sets FROM routine_sets
+        WHERE routine_id = ?
+        ORDER BY position ASC, id ASC
     """, (routine_id,))
     rows = c.fetchall()
     conn.close()
-    return [{"exercise": row[0], "sets": row[1]} for row in rows]
+    return [{"id": row[0], "exercise": row[1], "sets": row[2]} for row in rows]
 
 def delete_routine(routine_id: int):
     conn = get_connection()
@@ -208,5 +214,16 @@ def delete_routine(routine_id: int):
     # Remove template sets first (CASCADE would do it, but explicit is safe)
     c.execute("DELETE FROM routine_sets WHERE routine_id = ?", (routine_id,))
     c.execute("DELETE FROM planned_routines WHERE id = ?", (routine_id,))
+    conn.commit()
+    conn.close()
+
+def update_routine_set_position(set_id, position):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        UPDATE routine_sets
+        SET position = ?
+        WHERE id = ?
+    """, (position, set_id))
     conn.commit()
     conn.close()

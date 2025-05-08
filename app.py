@@ -305,9 +305,17 @@ def create_routine():
         # Save the routine
         elif action == "save":
             if "new_routine" in session:
-                name = session["new_routine"]["name"]
-                flash(f"Routine “{name}” saved!", "success")
-                session.pop("new_routine", None)
+                rid = session["new_routine"]["id"]
+            # Handle order update
+            order = request.form.get("order", "")
+            ids = [int(x) for x in order.split(",") if x.strip().isdigit()]
+            for index, set_id in enumerate(ids):
+                update_routine_set_position(set_id, index)
+
+            name = session["new_routine"]["name"]
+            flash(f"Routine “{name}” saved!", "success")
+            session.pop("new_routine", None)
+
             return redirect(url_for("premade"))
 
         # Discard routine and delete from DB
