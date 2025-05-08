@@ -359,3 +359,86 @@ def reorder_routine_sets():
 
     flash("Routine order updated!", "success")
     return redirect(url_for("create_routine"))
+
+@app.route("/preview-routine/<int:routine_id>")
+def preview_routine(routine_id):
+    routine_sets = get_sets_for_routine(routine_id)
+
+    routine_name = next((r["name"] for r in get_all_routines() if r["id"] == routine_id), "Unnamed Routine")
+
+    routine_sets_expanded = []
+    for s in routine_sets:
+        for _ in range(s["sets"]):
+            routine_sets_expanded.append((s["id"], s["exercise"], 1))
+
+    muscle_counts = summarize_muscles(routine_sets_expanded)
+
+    return render_template(
+        "preview_routine.html",
+        routine_name=routine_name,
+        routine_sets=routine_sets,
+        settings=app_settings,     
+        routine_id=routine_id,
+        muscle_counts=muscle_counts
+    )
+
+@app.route("/edit-routine/<int:routine_id>", methods=["GET", "POST"])
+def edit_routine(routine_id):
+    routine = get_routine_by_id(routine_id)
+    all_exercises = presaved_exercises + get_all_custom_exercises()
+    routine_sets = get_sets_for_routine(routine_id)
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        # Rename routine
+        if action == "update_name":
+            new_name = request.form.get("new_name", "").strip()
+            if new_name:
+                update_routine_name(routine_id, new_name)
+                flash("Routine renamed.", "success")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+
+        # Add new set
+        elif action == "add_set":
+            exercise = request.form.get("exercise")
+            sets = int(request.form.get("sets", 1))
+
+            if exercise == "__custom__":
+                name = request.form.get("custom_name").strip()
+                muscle = request.form.get("custom_muscle").strip()
+                if name and muscle:
+                    register_custom_exercise(name, muscle, presaved_exercises)
+                    exercise = name
+
+            if exercise:
+                insert_routine_set(routine_id, exercise, sets)
+                flash(f"Added {sets}× {exercise}", "success")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+
+        # Save reordering
+        elif action == "save":
+            order = request.form.get("order", "")
+            if order:
+                ids = [int(i) for i in order.split(",") if i]
+                for idx, set_id in enumerate(ids):
+                    update_routine_set_position(set_id, idx)
+            flash("Routine updated.", "success")
+            return redirect(url_for("preview_routine", routine_id=routine_id))
+
+    return render_template(
+        "edit_routine.html",
+        routine=routine,
+        exercises=all_exercises,
+        routine_sets=routine_sets,
+        preferred_order=preferred_order,
+        settings=app_settings
+    )
+
+
+@app.route("/delete-routine-set/<int:set_id>", methods=["POST"])
+def delete_routine_set(set_id):
+    routine_id = request.form.get("routine_id")
+    delete_routine_set_by_id(set_id)
+    flash("Set removed.", "success")
+    return redirect(url_for("edit_routine", routine_id=routine_id))

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Edit Routine – Workout Tracker{% endblock %}
+
+{% block content %}
+<h1 class="text-white fw-bold mb-4 text-center">Edit: {{ routine.name }}</h1>
+
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <div class="col-12">
+
+    {# ✅ Toasts #}
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const toastContainer = document.querySelector('.toast-container');
+            {% for msg in messages %}
+            const toastEl = document.createElement('div');
+            toastEl.className = 'toast align-items-center text-bg-success border-0';
+            toastEl.role = 'alert'; toastEl.ariaLive = 'assertive'; toastEl.ariaAtomic = 'true';
+            toastEl.innerHTML = `
+              <div class="d-flex">
+                <div class="toast-body">{{ msg }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>`;
+            toastContainer.appendChild(toastEl);
+            new bootstrap.Toast(toastEl, { delay: 1500 }).show();
+            {% endfor %}
+          });
+        </script>
+      {% endif %}
+    {% endwith %}
+
+    {# ✅ Rename Routine #}
+    <form method="POST" class="card home-card p-3 mb-3">
+      <input type="hidden" name="action" value="update_name">
+      <label for="new_name" class="form-label fw-semibold">Routine Name</label>
+      <input type="text" name="new_name" id="new_name" value="{{ routine.name }}" class="form-control mb-2" required>
+      <button type="submit" class="btn btn-sm btn-primary w-100">Rename</button>
+    </form>
+
+    {# ✅ Add New Set #}
+    <form method="POST" class="card home-card p-3 mb-3">
+      <input type="hidden" name="action" value="add_set">
+      <div class="mb-3">
+        <label for="exercise" class="form-label fw-semibold">Exercise</label>
+        <select id="exercise" name="exercise" class="form-select" data-choices onchange="toggleCustomExercise(this.value)" required>
+          <option value="">Select exercise</option>
+          <option value="__custom__">Custom Exercise</option>
+          {% for e in exercises %}
+            <option value="{{ e.name }}">{{ e.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="custom-fields" class="mb-3" style="display: none;">
+        <div class="mb-2">
+          <label class="form-label fw-semibold">Custom Name</label>
+          <input type="text" name="custom_name" class="form-control">
+        </div>
+        <div>
+          <label class="form-label fw-semibold">Muscle Group</label>
+          <select name="custom_muscle" class="form-select">
+            <option value="">Choose muscle group</option>
+            {% for m in preferred_order %}
+              <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="sets" class="form-label fw-semibold">Number of Sets</label>
+        <div class="input-group">
+          <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
+          <input type="number" id="sets" name="sets" class="form-control text-center" value="3" min="1" max="10" step="1">
+          <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success w-100">+ Add Exercise</button>
+    </form>
+
+    {# ✅ List + Reordering #}
+    {% if routine_sets %}
+    <form method="POST">
+      <input type="hidden" name="action" value="save">
+      <input type="hidden" name="order" id="order-input">
+      <div class="card home-card p-3 mb-3">
+        <h6 class="fw-bold mb-2 text-center">Current Exercises</h6>
+        <ul id="routine-list" class="list-group">
+          {% for item in routine_sets %}
+          <li class="list-group-item d-flex justify-content-between align-items-center mb-1" data-id="{{ item.id }}">
+            <div>
+              <div class="fw-semibold">{{ item.exercise }}</div>
+              <small class="text-muted">{{ item.sets }}×</small>
+            </div>
+            <div>
+              <form method="POST" action="{{ url_for('delete_routine_set', set_id=item.id) }}">
+                <input type="hidden" name="routine_id" value="{{ routine.id }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger ms-2" onclick="return confirm('Remove this set?');">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">📏 Save Changes</button>
+    </form>
+    {% endif %}
+
+    {# ✅ Back to Routine Preview #}
+    <div class="text-center mt-2">
+      <a href="{{ url_for('preview_routine', routine_id=routine.id) }}" class="btn btn-outline-light w-100">
+        <i class="bi bi-arrow-left-circle me-1"></i> Back to Routine Preview
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('select[data-choices]').forEach(el => {
+      if (el.choices) el.choices.destroy();
+      el.choices = new Choices(el, {
+        searchEnabled: true,
+        shouldSort: false,
+        itemSelectText: ''
+      });
+    });
+
+    const list = document.getElementById('routine-list');
+    const orderInput = document.getElementById('order-input');
+    if (list && orderInput) {
+      new Sortable(list, {
+        animation: 150,
+        onEnd: () => {
+          const ids = [...list.children].map(li => li.dataset.id);
+          orderInput.value = ids.join(',');
+        }
+      });
+    }
+  });
+
+  function toggleCustomExercise(value) {
+    const cf = document.getElementById('custom-fields');
+    if (value === '__custom__') {
+      cf.style.display = 'block';
+      document.querySelector('[name="custom_name"]').required = true;
+      document.querySelector('[name="custom_muscle"]').required = true;
+    } else {
+      cf.style.display = 'none';
+      document.querySelector('[name="custom_name"]').required = false;
+      document.querySelector('[name="custom_muscle"]').required = false;
+    }
+  }
+
+  function change(field, delta) {
+    const el = document.getElementById(field);
+    let val = parseInt(el.value, 10) || 0;
+    val = Math.max(1, Math.min(99, val + delta));
+    el.value = val;
+  }
+</script>
+{% endblock %}

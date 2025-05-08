@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ routine_name }} – Preview{% endblock %}
+
+{% block content %}
+  <h1 class="text-white fw-bold mb-4 text-center">{{ routine_name }}</h1>
+
+  <div class="row justify-content-center w-100" style="max-width: 400px;">
+    <div class="col-12">
+      <!-- Exercises -->
+      <div class="card home-card p-4">
+        {% if routine_sets %}
+          <h6 class="fw-semibold mb-3 text-center">Exercises</h6>
+          <ul class="list-group">
+            {% for item in routine_sets %}
+              <li class="list-group-item d-flex justify-content-between mb-1">
+                {{ item.exercise }}
+                <span>{{ item.sets }}×</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-center text-muted mb-0">No exercises in this routine.</p>
+        {% endif %}
+      </div>
+
+      <!-- Muscle Group Graph -->
+      {% if muscle_counts %}
+        <div class="card home-card mt-4 p-3">
+          <h6 class="fw-bold mb-3 text-center">Muscle Group Summary</h6>
+          <canvas id="muscleChart" width="400" height="300"></canvas>
+        </div>
+      {% endif %}
+
+      <!-- Start Routine -->
+      <div class="text-center mt-4">
+        <a href="{{ url_for('start_routine', routine_id=routine_id) }}" class="btn btn-primary w-100">
+          ▶️ Start Routine
+        </a>
+      </div>
+
+      <!-- Back -->
+      <div class="text-center mt-2">
+        <a href="{{ url_for('premade') }}" class="btn btn-outline-light w-100">
+          <i class="bi bi-arrow-left-circle me-1"></i> Back to Routines
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  {% if muscle_counts %}
+  <script>
+    const labels = {{ muscle_counts.keys() | list | tojson }};
+    const data = {{ muscle_counts.values() | list | tojson }};
+
+    const ctx = document.getElementById('muscleChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Sets per Muscle Group',
+          data: data,
+          backgroundColor: 'rgba(13, 110, 253, 0.7)',  // Bootstrap primary color
+          borderRadius: 4,
+          barPercentage: 0.8
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+  </script>
+  {% endif %}
+{% endblock %}
