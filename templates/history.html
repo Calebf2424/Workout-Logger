@@ -37,37 +37,38 @@
       {% if chosen_date %}
         {% if sets %}
           <ul class="list-group mb-0">
-            {% for s in sets %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <div class="fw-semibold">{{ s[1] }}</div>
-                <small class="text-muted">
-                  {{ s[2] }} reps &bull; {{ s[3] }} lbs
-                  {% if settings.rpe_enabled and s[4] is not none %}
-                    &bull; RPE {{ s[4] }}
-                  {% endif %}
-                </small>
-              </div>
-              <div class="btn-group btn-group-sm gap-2">
-                <a href="{{ url_for('edit_set_route', set_id=s[0], origin='history', date=chosen_date) }}"
-                   class="btn btn-outline-secondary btn-sm rounded px-1 py-1"
-                   title="Edit this set">
-                  <i class="bi bi-pencil"></i>
-                </a>
-                <form action="{{ url_for('delete_set_route', set_id=s[0]) }}"
-                      method="POST"
-                      onsubmit="return confirm('Are you sure you want to delete this set?');">
-                  <input type="hidden" name="origin" value="history">
-                  <input type="hidden" name="date"   value="{{ chosen_date }}">
-                  <button type="submit"
-                          class="btn btn-outline-danger btn-sm rounded px-1 py-1"
-                          title="Delete this set">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              </div>
-            </li>
+           {% for s in sets %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-semibold">{{ s["exercise"] }}</div>
+                  <small class="text-muted">
+                    {{ s["reps"] }} reps &bull; {{ s["weight"] }} lbs
+                    {% if settings.rpe_enabled and s["rpe"] is not none %}
+                      &bull; RPE {{ s["rpe"] }}
+                    {% endif %}
+                  </small>
+                </div>
+                <div class="btn-group btn-group-sm gap-2">
+                  <a href="{{ url_for('edit_set_route', set_id=s["id"], origin='history', date=chosen_date) }}"
+                    class="btn btn-outline-secondary btn-sm rounded px-1 py-1"
+                    title="Edit this set">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <form action="{{ url_for('delete_set_route', set_id=s["id"]) }}"
+                        method="POST"
+                        onsubmit="return confirm('Are you sure you want to delete this set?');">
+                    <input type="hidden" name="origin" value="history">
+                    <input type="hidden" name="date"   value="{{ chosen_date }}">
+                    <button type="submit"
+                            class="btn btn-outline-danger btn-sm rounded px-1 py-1"
+                            title="Delete this set">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </li>
             {% endfor %}
+
           </ul>
         {% else %}
           <p class="text-center text-muted mb-0">
