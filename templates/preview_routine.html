@@ -13,8 +13,8 @@
           <ul class="list-group">
             {% for item in routine_sets %}
               <li class="list-group-item d-flex justify-content-between mb-1">
-                {{ item.exercise }}
-                <span>{{ item.sets }}×</span>
+                {{ item["exercise"] }}
+                <span>{{ item["sets"] }}×</span>
               </li>
             {% endfor %}
           </ul>
