@@ -377,7 +377,6 @@ def preview_routine(routine_id):
                                         "sets": 1
                                         })
 
-
     muscle_counts = summarize_muscles(routine_sets_expanded)
 
     return render_template(
