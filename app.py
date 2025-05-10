@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from datetime import date, datetime, timedelta
 from database import *
 from data import *
+from dotenv import load_dotenv
 
 app = Flask(__name__)
-app.secret_key = "added"
+load_dotenv()
+app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
 
 create_sets_table()
 create_custom_exercise_table()

@@ -3,7 +3,11 @@
 <head>
   <!-- Meta tags -->
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0d6efd">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>{% block title %}Workout Tracker{% endblock %}</title>
 
   <!-- Bootstrap CSS -->
@@ -124,8 +128,9 @@
   <!-- Service worker -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('{{ url_for('static', filename='service-worker.js') }}')
-        .then(() => console.log("Service Worker Registered"));
+      navigator.serviceWorker.register("/static/service-worker.js")
+        .then(reg => console.log("Service Worker registered:", reg.scope))
+        .catch(err => console.error("Service Worker failed:", err));
     }
   </script>
 </head>
