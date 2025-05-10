@@ -91,7 +91,7 @@ def summarize_muscles(sets):
 
     muscle_counts = {}
     for s in sets:
-        exercise_name = s[1]
+        exercise_name = s["exercise"]
         muscle = muscle_map.get(exercise_name, "Unknown")
         muscle_counts[muscle] = muscle_counts.get(muscle, 0) + 1
 
