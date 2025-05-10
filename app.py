@@ -371,7 +371,12 @@ def preview_routine(routine_id):
     routine_sets_expanded = []
     for s in routine_sets:
         for _ in range(s["sets"]):
-            routine_sets_expanded.append((s["id"], s["exercise"], 1))
+            routine_sets_expanded.append({
+                                        "id": s["id"],
+                                        "exercise": s["exercise"],
+                                        "sets": 1
+                                        })
+
 
     muscle_counts = summarize_muscles(routine_sets_expanded)
 
