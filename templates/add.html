@@ -2,137 +2,117 @@
 {% block title %}Add a Set – Workout Tracker{% endblock %}
 
 {% block content %}
-  <h1 class="text-white fw-bold mb-4">Add a Set</h1>
+<h1 class="text-white fw-bold mb-4">Add a Set</h1>
 
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const toastContainer = document.querySelector('.toast-container');
-          {% for msg in messages %}
-          const toastEl = document.createElement('div');
-          toastEl.className = 'toast align-items-center text-bg-success border-0';
-          toastEl.role = 'alert'; toastEl.ariaLive = 'assertive'; toastEl.ariaAtomic = 'true';
-          toastEl.innerHTML = `
-            <div class="d-flex">
-              <div class="toast-body">{{ msg }}</div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                      data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>`;
-          toastContainer.appendChild(toastEl);
-          new bootstrap.Toast(toastEl, { delay: 1500 }).show();
-          {% endfor %}
-        });
-      </script>
-    {% endif %}
-  {% endwith %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const toastContainer = document.querySelector('.toast-container');
+        {% for msg in messages %}
+        const toastEl = document.createElement('div');
+        toastEl.className = 'toast align-items-center text-bg-success border-0';
+        toastEl.role = 'alert';
+        toastEl.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">{{ msg }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>`;
+        toastContainer.appendChild(toastEl);
+        new bootstrap.Toast(toastEl, { delay: 1500 }).show();
+        {% endfor %}
+      });
+    </script>
+  {% endif %}
+{% endwith %}
 
-  <div class="row justify-content-center w-100" style="max-width: 400px;">
-    <div class="col-12">
-      <div class="card home-card p-4">
-        <form action="{{ url_for('add_workout') }}" method="POST" onsubmit="return setDateBeforeSubmit();">
-          <input type="hidden" name="local_date" id="local_date">
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <div class="col-12">
+    <div class="card home-card p-4">
+      <form action="{{ url_for('add_workout') }}" method="POST">
+        <input type="hidden" name="local_date" id="local_date">
 
-          <!-- Exercise selector -->
-          <div class="mb-4">
-            <label for="exercise" class="form-label fw-semibold">Exercise</label>
-            <select id="exercise" name="exercise" data-choices
-                    class="form-select"
-                    onchange="toggleCustomExercise(this.value)"
-                    required>
-              <option value="">Select exercise</option>
-              <option value="__custom__">Custom Exercise</option>
-              {% for e in exercises %}
-                <option value="{{ e.name }}">{{ e.name }}</option>
+        <!-- Exercise selector -->
+        <div class="mb-4">
+          <label for="exercise" class="form-label fw-semibold">Exercise</label>
+          <select id="exercise" name="exercise" data-choices class="form-select" onchange="toggleCustomExercise(this.value)" required>
+            <option value="">Select exercise</option>
+            <option value="__custom__">Custom Exercise</option>
+            {% for e in exercises %}
+              <option value="{{ e.name }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Custom Exercise fields -->
+        <div id="custom-fields" class="mb-4" style="display: none;">
+          <div class="mb-3">
+            <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+            <input type="text" id="custom_name" name="custom_name" class="form-control">
+          </div>
+          <div>
+            <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+            <select id="custom_muscle" name="custom_muscle" class="form-select">
+              <option value="">Choose muscle group</option>
+              {% for m in muscle_groups %}
+                <option value="{{ m }}">{{ m }}</option>
               {% endfor %}
             </select>
           </div>
+        </div>
 
-          <!-- Custom Exercise fields -->
-          <div id="custom-fields" class="mb-4" style="display: none;">
-            <div class="mb-3">
-              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
-              <input type="text" id="custom_name" name="custom_name" class="form-control">
-            </div>
-            <div>
-              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
-              <select id="custom_muscle" name="custom_muscle" class="form-select">
-                <option value="">Choose muscle group</option>
-                {% for m in muscle_groups %}
-                  <option value="{{ m }}">{{ m }}</option>
-                {% endfor %}
-              </select>
-            </div>
+        <!-- Reps -->
+        <div class="mb-4">
+          <label for="reps" class="form-label fw-semibold">Number of Reps</label>
+          <div class="input-group">
+            <button type="button" class="btn btn-outline-primary" onclick="change('reps', -1)">−</button>
+            <input type="number" id="reps" name="reps" class="form-control text-center" value="5" min="1" max="20" oninput="clamp('reps')">
+            <button type="button" class="btn btn-outline-primary" onclick="change('reps', 1)">+</button>
           </div>
+        </div>
 
-          <!-- Reps -->
-          <div class="mb-4">
-            <label for="reps" class="form-label fw-semibold">Number of Reps</label>
-            <div class="d-flex justify-content-center">
-              <div class="input-group" style="width:100%; max-width:350px;">
-                <button type="button" class="btn btn-outline-primary" onclick="change('reps', -1)">−</button>
-                <input type="number" id="reps" name="reps"
-                       class="form-control text-center"
-                       value="5" min="1" max="20" step="1"
-                       onfocus="if(this.value==='5') this.value='';"
-                       oninput="clamp('reps')">
-                <button type="button" class="btn btn-outline-primary" onclick="change('reps', 1)">+</button>
-              </div>
-            </div>
+        <!-- Weight -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Weight (lbs)</label>
+          <div class="d-flex align-items-center">
+            <input type="range" id="weightRange" name="weight" class="form-range flex-grow-1 me-2"
+                   min="0" max="225" step="5" value="100" oninput="syncWeightFromSlider()">
+            <input type="number" id="weightInput" class="form-control text-center"
+                   style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
+                   value="100" min="0" max="1000" step="5" oninput="syncWeightFromInput()">
           </div>
+        </div>
 
-          <!-- Weight -->
-          <div class="mb-4">
-            <label class="form-label fw-semibold">Weight (lbs)</label>
-            <div class="d-flex align-items-center">
-              <input type="range" id="weightRange" name="weight"
-                     class="form-range flex-grow-1 me-2"
-                     min="0" max="225" step="5" value="100"
-                     oninput="syncWeightFromSlider()">
-              <input type="number" id="weightInput"
-                     class="form-control text-center"
-                     style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
-                     value="100" min="0" max="1000" step="5"
-                     onfocus="this.select()"
-                     oninput="syncWeightFromInput()">
-            </div>
+        <!-- Optional RPE -->
+        {% if settings.rpe_enabled %}
+        <div class="mb-4">
+          <label for="rpe" class="form-label fw-semibold">RPE</label>
+          <div class="input-group">
+            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
+            <input type="number" id="rpe" name="rpe" class="form-control text-center" value="8" min="6" max="10" step="0.5">
+            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
           </div>
+        </div>
+        {% endif %}
 
-          <!-- RPE -->
-          {% if settings.rpe_enabled %}
-            <div class="mb-4">
-              <label for="rpe" class="form-label fw-semibold">RPE</label>
-              <div class="d-flex justify-content-center">
-                <div class="input-group" style="width:100%; max-width:350px;">
-                  <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
-                  <input type="number" id="rpe" name="rpe"
-                         class="form-control text-center"
-                         value="8" min="6" max="10" step="0.5"
-                         onfocus="if(this.value==='8') this.value='';"
-                         oninput="clamp('rpe')">
-                  <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
-                </div>
-              </div>
-            </div>
-          {% endif %}
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary w-100 py-2">Submit</button>
+      </form>
 
-          <!-- Submit -->
-          <button type="submit" class="btn btn-primary w-100 py-2">Submit</button>
-        </form>
-      </div>
-
-      <!-- End Workout -->
       <div class="text-center mt-3">
         <a href="{{ url_for('summary') }}" class="btn btn-secondary">End Workout</a>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}
 
 {% block page_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // initialize exercise selector
     document.querySelectorAll('select[data-choices]').forEach(el => {
       if (el.choices) el.choices.destroy();
       el.choices = new Choices(el, {
@@ -141,32 +121,38 @@
         itemSelectText: ''
       });
     });
+
+    // set user's local date
+    const input = document.getElementById("local_date");
+    const today = new Date();
+    input.value = today.toISOString().split("T")[0];
+
+    // initialize weight slider
     syncWeightFromSlider();
   });
 
-  function change(field, delta) {
-    const el = document.getElementById(field);
+  function change(id, delta) {
+    const el = document.getElementById(id);
     let val = parseFloat(el.value) || 0;
-    val = Math.min(el.max, Math.max(el.min, val + delta));
-    el.value = val;
+    el.value = Math.min(el.max, Math.max(el.min, val + delta));
   }
 
-  function changeFloat(field, delta) { change(field, delta); }
+  function changeFloat(id, delta) { change(id, delta); }
 
-  function clamp(field) {
-    const el = document.getElementById(field);
+  function clamp(id) {
+    const el = document.getElementById(id);
     const raw = el.value.trim();
     if (raw === '') return;
     let val = parseFloat(raw);
     if (isNaN(val) || val < el.min) val = el.min;
-    if (val > el.max)               val = el.max;
+    if (val > el.max) val = el.max;
     el.value = val;
   }
 
   function syncWeightFromSlider() {
     const slider = document.getElementById('weightRange');
-    const input  = document.getElementById('weightInput');
-    const val    = parseInt(slider.value, 10);
+    const input = document.getElementById('weightInput');
+    const val = parseInt(slider.value, 10);
     input.value = val;
     const pct = (val - slider.min) / (slider.max - slider.min) * 100;
     slider.style.setProperty('--pct', pct + '%');
@@ -184,22 +170,10 @@
 
   function toggleCustomExercise(value) {
     const cf = document.getElementById('custom-fields');
-    if (value === '__custom__') {
-      cf.style.display = 'block';
-      document.getElementById('custom_name').required = true;
-      document.getElementById('custom_muscle').required = true;
-    } else {
-      cf.style.display = 'none';
-      document.getElementById('custom_name').required = false;
-      document.getElementById('custom_muscle').required = false;
-    }
-  }
-
-  function setDateBeforeSubmit() {
-    const input = document.getElementById("local_date");
-    const today = new Date();
-    input.value = today.toISOString().split("T")[0];
-    return true;
+    const isCustom = value === '__custom__';
+    cf.style.display = isCustom ? 'block' : 'none';
+    document.getElementById('custom_name').required = isCustom;
+    document.getElementById('custom_muscle').required = isCustom;
   }
 </script>
 {% endblock %}

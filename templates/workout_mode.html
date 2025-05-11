@@ -12,11 +12,11 @@
   </div>
   <div class="progress" style="height: 1rem; width: 100%;">
     <div class="progress-bar bg-success"
-        role="progressbar"
-        style="width: {{ (index / total * 100) | round(0, 'floor') }}%;"
-        aria-valuenow="{{ index }}"
-        aria-valuemin="0"
-        aria-valuemax="{{ total }}">
+         role="progressbar"
+         style="width: {{ (index / total * 100) | round(0, 'floor') }}%;"
+         aria-valuenow="{{ index }}"
+         aria-valuemin="0"
+         aria-valuemax="{{ total }}">
     </div>
   </div>
 </div>
@@ -25,7 +25,7 @@
   <div class="col-12">
     <div class="card home-card p-4">
 
-      <form action="{{ url_for('complete_set') }}" method="POST" onsubmit="return setDateBeforeSubmit();">
+      <form action="{{ url_for('complete_set') }}" method="POST">
         <input type="hidden" name="local_date" id="local_date">
         <input type="hidden" name="exercise" value="{{ exercise }}">
 
@@ -44,33 +44,33 @@
           <label class="form-label fw-semibold">Weight (lbs)</label>
           <div class="d-flex align-items-center">
             <input type="range"
-                  id="weightRange" name="weight"
-                  class="form-range flex-grow-1 me-2"
-                  min="0" max="225" step="5"
-                  value="0"
-                  oninput="syncWeightFromSlider()">
+                   id="weightRange" name="weight"
+                   class="form-range flex-grow-1 me-2"
+                   min="0" max="225" step="5"
+                   value="0"
+                   oninput="syncWeightFromSlider()">
             <input type="number"
-                  id="weightInput"
-                  class="form-control text-center"
-                  style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
-                  value="0" min="0" max="1000" step="5"
-                  onfocus="this.select()"
-                  oninput="syncWeightFromInput()">
+                   id="weightInput"
+                   class="form-control text-center"
+                   style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
+                   value="0" min="0" max="1000" step="5"
+                   oninput="syncWeightFromInput()">
           </div>
         </div>
 
         <!-- RPE -->
         {% if settings.rpe_enabled %}
-          <div class="mb-4">
-            <label for="rpe" class="form-label fw-semibold">RPE</label>
-            <div class="input-group">
-              <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
-              <input type="number" id="rpe" name="rpe" class="form-control text-center" value="" min="6" max="10" step="0.5">
-              <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
-            </div>
+        <div class="mb-4">
+          <label for="rpe" class="form-label fw-semibold">RPE</label>
+          <div class="input-group">
+            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
+            <input type="number" id="rpe" name="rpe" class="form-control text-center" value="" min="6" max="10" step="0.5">
+            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
           </div>
+        </div>
         {% endif %}
 
+        <!-- Buttons -->
         <div class="d-grid gap-2">
           <button type="submit" class="btn btn-success w-100">✅ Completed Set</button>
         </div>
@@ -93,6 +93,13 @@
 
 {% block page_scripts %}
 <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("local_date");
+    const today = new Date();
+    input.value = today.toISOString().split("T")[0];
+    syncWeightFromSlider();
+  });
+
   function change(id, delta) {
     const input = document.getElementById(id);
     let val = parseInt(input.value) || 0;
@@ -112,6 +119,7 @@
     const input = document.getElementById('weightInput');
     const val = parseInt(slider.value, 10);
     input.value = val;
+
     const pct = (val - slider.min) / (slider.max - slider.min) * 100;
     slider.style.setProperty('--pct', pct + '%');
   }
@@ -125,16 +133,5 @@
     slider.value = val;
     syncWeightFromSlider();
   }
-
-  function setDateBeforeSubmit() {
-    const input = document.getElementById("local_date");
-    const today = new Date();
-    input.value = today.toISOString().split("T")[0];
-    return true;
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    syncWeightFromSlider();
-  });
 </script>
 {% endblock %}
