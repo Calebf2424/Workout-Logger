@@ -26,6 +26,7 @@
       <div class="card home-card p-4">
 
         <form action="{{ url_for('complete_set') }}" method="POST">
+          <input type="hidden" name="local_date" id="local_date">
           <!-- Exercise is fixed -->
           <input type="hidden" name="exercise" value="{{ exercise }}">
           
@@ -130,6 +131,11 @@ function syncWeightFromInput() {
   slider.value = val;
   syncWeightFromSlider();
 }
+document.addEventListener("DOMContentLoaded", function () {
+  const input = document.getElementById("local_date");
+  const today = new Date();
+  input.value = today.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+});
 
 </script>
 
