@@ -1,39 +1,102 @@
 {% extends "base.html" %}
-{% block title %}Welcome – Workout Tracker{% endblock %}
+{% block title %}Settings – Workout Tracker{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column align-items-center justify-content-center vh-100 w-100 px-3">
+<style>
+  .form-switch .form-check-input {
+    width: 3rem;
+    height: 1.6rem;
+    background-color: #ffffff;
+    border: 1px solid #0d6efd;
+    border-radius: 1.6rem;
+    position: relative;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.25s ease-in-out;
+  }
 
-  <div class="card home-card text-center p-5" style="max-width: 400px; width: 100%;">
-    <h1 class="fw-bold mb-3">🏋️‍♂️ Workout Tracker</h1>
-    <p class="text-muted mb-4">Track your progress, one set at a time.</p>
+  .form-switch .form-check-input:checked {
+    background-color: #0d6efd;
+  }
 
-    <form action="{{ url_for('create_guest') }}" method="POST">
-      <button type="submit" class="btn btn-primary w-100 py-2 fs-5">
-        🚀 Start as Guest
-      </button>
-    </form>
+  .form-switch .form-check-input::after {
+    content: "";
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    transition: left 0.25s ease-in-out, background-color 0.25s ease-in-out;
+  }
 
-    <p class="text-muted mt-3 mb-0" style="font-size: 0.85rem;">
-      User accounts coming in a future update.
-    </p>
-  </div>
+  .form-switch .form-check-input:checked::after {
+    left: 1.6rem;
+    background-color: #ffffff;
+  }
 
+  .btn-discard {
+    background: #dc3545;
+    color: #fff;
+  }
+  .btn-discard:hover,
+  .btn-discard:focus {
+    background: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+  }
+</style>
+
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <form action="{{ url_for('settings') }}" method="POST" class="w-100">
+    
+    <!-- Toggles + Timezone -->
+    <div class="col-12 mb-3">
+      <div class="card home-card p-4">
+        
+        <!-- RPE toggle -->
+        <div class="form-check form-switch d-flex justify-content-between align-items-center mb-3">
+          <label class="form-check-label fs-5 mb-0" for="rpeSwitch">Enable RPE</label>
+          <input type="checkbox" class="form-check-input" id="rpeSwitch" name="rpe_enabled"
+                 {% if settings.rpe_enabled %}checked{% endif %}>
+        </div>
+
+        <!-- Max Weight Input -->
+        <div class="mb-3">
+          <label for="max_weight" class="form-label fw-semibold">Max Weight (lbs)</label>
+          <input type="number" id="max_weight" name="max_weight"
+                class="form-control text-center"
+                value="{{ settings.max_weight }}" min="50" max="2000">
+        </div>
+
+        <!-- Timezone selector -->
+        <div class="mb-2">
+          <label for="timezone" class="form-label fw-semibold">Timezone</label>
+          <select name="timezone" id="timezone" class="form-select">
+            {% for tz in timezones %}
+              <option value="{{ tz }}" {% if settings.timezone == tz %}selected{% endif %}>
+                {{ tz }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="col-12">
+      <div class="card home-card p-4 text-center">
+        <div class="d-grid gap-3">
+          <button type="button" class="btn btn-secondary py-2">Help</button>
+          <a href="{{ url_for('index') }}" class="btn btn-discard py-2">Discard</a>
+          <button type="submit" class="btn btn-primary py-2">Save &amp; Exit</button>
+        </div>
+      </div>
+    </div>
+
+  </form>
 </div>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!document.cookie.includes("tz_set=true")) {
-      fetch("/set-timezone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone: tz })
-      }).then(() => {
-        document.cookie = "tz_set=true; path=/";
-        location.reload();
-      });
-    }
-  });
-</script>
 {% endblock %}
