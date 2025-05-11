@@ -1,93 +1,107 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session # type: ignore
-from datetime import date, datetime, timedelta
+from flask import Flask, render_template, request, redirect, url_for, flash, session  # type: ignore
+from datetime import date, timedelta
+import uuid
+from dotenv import load_dotenv #type: ignore
+import os
+
 from database import *
 from data import *
-from dotenv import load_dotenv
 
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
 
+# --- TABLE CREATION ---
+create_users_table()
 create_sets_table()
 create_custom_exercise_table()
-clear_custom_exercises() 
 create_planned_routines_table()
 create_routine_sets_table()
 
-#home page
+# --- SESSION HANDLING ---
+@app.before_request
+def require_guest():
+    allowed_routes = {"static", "landing", "create_guest"}
+    if request.endpoint in allowed_routes:
+        return
+    if "guest_id" not in session:
+        return redirect(url_for("landing"))
+
+@app.route("/landing")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/create-guest", methods=["POST"])
+def create_guest():
+    guest_id = f"guest_{uuid.uuid4().hex[:8]}"
+    session["guest_id"] = guest_id
+    create_guest_user(guest_id)
+    return redirect(url_for("index"))
+
+# --- CORE ROUTES ---
 @app.route("/")
 def index():
     return render_template("index.html")
 
-#page for adding sets to todays workout
 @app.route("/add-workout", methods=["GET", "POST"])
 def add_workout():
+    user_id = get_user_id_by_guest(session["guest_id"])
     if request.method == "POST":
         exercise = request.form.get("exercise")
         if exercise == "__custom__":
             name = request.form.get("custom_name")
             muscle = request.form.get("custom_muscle")
             exercise = name
-            # Add to in-memory presaved_exercises
-            register_custom_exercise(name, muscle, presaved_exercises)
+            register_custom_exercise(name, muscle, user_id)
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
         rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
         log_date = date.today().isoformat()
 
-        insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, None)
+        insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, user_id)
         flash("Set added!")
         return redirect(url_for("add_workout"))
 
-    all_exercises = presaved_exercises + get_all_custom_exercises()
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
     muscle_groups = sorted(
         set(e["muscle"] for e in all_exercises),
         key=lambda x: preferred_order.index(x) if x in preferred_order else float("inf")
     )
     return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=app_settings)
 
-#history
 @app.route("/history", methods=["GET", "POST"])
 def history():
-    # Determine chosen_date from POST (form) or GET (query param)
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
         chosen_date = request.args.get("date")
 
     if chosen_date:
-        sets = get_specific_day(chosen_date)
+        user_id = get_user_id_by_guest(session["guest_id"])
+        sets = get_specific_day(chosen_date, user_id)
         muscle_counts = summarize_muscles(sets)
 
         dt = date.fromisoformat(chosen_date)
         prev_date = (dt - timedelta(days=1)).isoformat()
         next_date = (dt + timedelta(days=1)).isoformat()
-
         display_date = f"{dt.strftime('%B')} {dt.day}, {dt.year}"
 
-        return render_template(
-            "history.html",
-            sets=sets,
-            chosen_date=chosen_date,
-            prev_date=prev_date,
-            next_date=next_date,
-            display_date=display_date,
-            muscle_counts=muscle_counts,
-            settings=app_settings
-        )
+        return render_template("history.html", sets=sets, chosen_date=chosen_date,
+                               prev_date=prev_date, next_date=next_date,
+                               display_date=display_date,
+                               muscle_counts=muscle_counts, settings=app_settings)
 
-    # No date chosen yet
     return render_template("history.html", sets=None, chosen_date=None)
 
-#summary of workout for the day when choosing to end the workout
 @app.route("/summary")
 def summary():
     today = date.today().isoformat()
-    sets = get_specific_day(today)
+    user_id = get_user_id_by_guest(session["guest_id"])
+    sets = get_specific_day(today, user_id)
     muscle_counts = summarize_muscles(sets)
-    
-    return render_template("summary.html", sets=sets, today=today, muscle_counts=muscle_counts, settings=app_settings)
+    return render_template("summary.html", sets=sets, today=today,
+                           muscle_counts=muscle_counts, settings=app_settings)
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
@@ -95,92 +109,54 @@ def settings():
         app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
         app_settings["dark_mode"] = request.form.get("dark_mode") == "on"
         return redirect(url_for("index"))
-
     return render_template("settings.html", settings=app_settings)
 
-#temp for testing
-@app.route("/delete-db")
-def delete_db():
-    clear_database()
-    return redirect(url_for("index"))
-
-#delete a set
 @app.route("/delete-set/<int:set_id>", methods=["POST"])
 def delete_set_route(set_id):
     origin = request.form.get("origin")
     date_param = request.form.get("date")
     delete_set(set_id)
-
     if origin == "summary":
         return redirect(url_for("summary") + "#exercises")
     elif origin == "history" and date_param:
         return redirect(url_for("history", date=date_param))
-    else:
-        return redirect(url_for("index"))
+    return redirect(url_for("index"))
 
-# Edit a set
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
 def edit_set_route(set_id):
     if request.method == "POST":
-        # Parse submitted form values
         reps = int(request.form["reps"])
         weight = int(request.form["weight"])
-
-        # Only grab RPE if enabled
-        if app_settings["rpe_enabled"]:
-            rpe_raw = request.form.get("rpe")
-            rpe = float(rpe_raw) if rpe_raw else None
-        else:
-            rpe = None
-
-        # Where we came from (summary/history) and date if history
-        origin     = request.form.get("origin")
+        rpe = float(request.form["rpe"]) if app_settings["rpe_enabled"] and request.form.get("rpe") else None
+        origin = request.form.get("origin")
         date_param = request.form.get("date")
-
-        # Update in the DB
         update_set(set_id, reps, weight, rpe)
-
-        # Redirect back, anchoring to #exercises if from summary
         if origin == "summary":
             return redirect(url_for("summary") + "#exercises")
-        else:
-            return redirect(url_for("history", date=date_param))
+        return redirect(url_for("history", date=date_param))
 
-    # GET -> render the edit form
-    origin     = request.args.get("origin")
+    origin = request.args.get("origin")
     date_param = request.args.get("date")
-    set_data   = get_set_by_id(set_id)
+    set_data = get_set_by_id(set_id)
+    return render_template("edit.html", set_data=set_data,
+                           origin=origin, date_param=date_param, settings=app_settings)
 
-    return render_template(
-        "edit.html",
-        set_data=set_data,
-        origin=origin,
-        date_param=date_param,
-        settings=app_settings
-    )
-
-#premade workout routes
-#everything below for premade routines
-#landing page
+# --- PREMADE ROUTINES ---
 @app.route("/premade", methods=["GET", "POST"])
 def premade():
     if request.method == "POST":
         action = request.form.get("action")
-
         if action == "create":
             return redirect(url_for("create_routine"))
         elif action.startswith("start_"):
             routine_id = int(action.replace("start_", ""))
             return redirect(url_for("start_routine", routine_id=routine_id))
-        elif action.startswith("edit_"):
-            routine_id = int(action.replace("edit_", ""))
-            return redirect(url_for("edit_routine", routine_id=routine_id))
         elif action.startswith("delete_"):
             routine_id = int(action.replace("delete_", ""))
             delete_routine(routine_id)
             return redirect(url_for("premade"))
-        
-    routines = get_all_routines()
+    user_id = get_user_id_by_guest(session["guest_id"])
+    routines = get_all_routines(user_id)
     return render_template("premade.html", routines=routines)
 
 #start
@@ -244,14 +220,14 @@ def complete_set():
 
     idx = routine["current_index"]
     current = routine["sets"][idx]
-
+    user_id = get_user_id_by_guest(session["guest_id"])
     exercise = current["exercise"]
     reps     = int(request.form["reps"])
     weight   = float(request.form["weight"])
     rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
 
     log_date = date.today().isoformat()
-    insert_set(exercise, reps, weight, rpe, log_date, None)
+    insert_set(exercise, reps, weight, rpe, log_date, user_id)
 
     routine["current_index"] = idx + 1
     session["active_routine"] = routine
@@ -260,11 +236,12 @@ def complete_set():
 
 @app.route("/create-routine", methods=["GET", "POST"])
 def create_routine():
-    all_exercises = presaved_exercises + get_all_custom_exercises()
+    user_id = get_user_id_by_guest(session["guest_id"])
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
 
     if request.method == "POST":
         action = request.form.get("action")
-
+        user_id = get_user_id_by_guest(session["guest_id"])
         # STEP 1 — Create the routine
         if action == "add":
             if "new_routine" not in session:
@@ -273,7 +250,7 @@ def create_routine():
                     flash("Give your routine a name first!", "danger")
                     return redirect(url_for("create_routine"))
 
-                rid = insert_routine(name)
+                rid = insert_routine(name, user_id)
                 session["new_routine"] = {"id": rid, "name": name}
                 flash(f"Routine '{name}' created!", "success")
                 return redirect(url_for("create_routine"))
@@ -295,12 +272,12 @@ def create_routine():
                     flash("Please fill in both name and muscle group for custom exercise.", "danger")
                     return redirect(url_for("create_routine"))
 
-                register_custom_exercise(custom_name, custom_muscle, presaved_exercises)
+                register_custom_exercise(custom_name, custom_muscle, presaved_exercises, user_id)
                 exercise = custom_name
 
             # Sets count
             sets_count = int(request.form.get("sets", 1))
-            insert_routine_set(rid, exercise, sets_count)
+            insert_routine_set(rid, exercise, sets_count, user_id)
             flash(f"Added {sets_count}× {exercise}", "success")
             return redirect(url_for("create_routine"))
 
@@ -364,9 +341,10 @@ def reorder_routine_sets():
 
 @app.route("/preview-routine/<int:routine_id>")
 def preview_routine(routine_id):
+    user_id = get_user_id_by_guest(session["guest_id"])
     routine_sets = get_sets_for_routine(routine_id)
 
-    routine_name = next((r["name"] for r in get_all_routines() if r["id"] == routine_id), "Unnamed Routine")
+    routine_name = next((r["name"] for r in get_all_routines(user_id) if r["id"] == routine_id), "Unnamed Routine")
 
     routine_sets_expanded = []
     for s in routine_sets:

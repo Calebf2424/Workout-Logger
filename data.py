@@ -1,4 +1,4 @@
-from database import get_all_custom_exercises, insert_custom_exercise
+from database import *
 #exercises on left associated muscle groups on right
 presaved_exercises = [
     {"name": "Hip Abduction Machine", "muscle": "Abductors"},
@@ -81,12 +81,11 @@ app_settings = {
     "dark_mode": False
 }
 
-def summarize_muscles(sets):
+def summarize_muscles(sets, user_id):
     # Build master lookup
     muscle_map = {e["name"]: e["muscle"] for e in presaved_exercises}
-
     # Include DB-loaded custom exercises
-    for e in get_all_custom_exercises():
+    for e in get_all_custom_exercises(user_id):
         muscle_map[e["name"]] = e["muscle"]
 
     muscle_counts = {}
@@ -97,7 +96,7 @@ def summarize_muscles(sets):
 
     return muscle_counts
 
-def register_custom_exercise(name, muscle, presaved_exercises):
+def register_custom_exercise(name, muscle, presaved_exercises, user_id):
     for e in presaved_exercises:
         if e["name"] == name:
             e["muscle"] = muscle
@@ -106,4 +105,4 @@ def register_custom_exercise(name, muscle, presaved_exercises):
         presaved_exercises.append({"name": name, "muscle": muscle})
 
     # Persist in DB
-    insert_custom_exercise(name, muscle)
+    insert_custom_exercise(name, muscle, user_id)
