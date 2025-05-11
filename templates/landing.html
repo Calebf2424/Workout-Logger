@@ -4,9 +4,14 @@
 {% block content %}
 <div class="d-flex flex-column align-items-center justify-content-center vh-100 text-center">
   <h1 class="text-white mb-4">Welcome to Workout Tracker</h1>
-  <p class="text-muted mb-4">User accounts coming in a future update!</p>
-  <form method="POST">
-    <button type="submit" class="btn btn-primary btn-lg">Create Guest Account</button>
-  </form>
+    <form action="{{ url_for('create_guest') }}" method="POST" class="text-center mt-5">
+    <button type="submit" class="btn btn-primary btn-lg">
+        Start as Guest
+    </button>
+    <p class="text-muted mt-2" style="font-size: 0.9rem;">
+        User accounts coming in a future update.
+    </p>
+</form>
+
 </div>
 {% endblock %}
