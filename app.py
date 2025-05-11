@@ -107,7 +107,7 @@ def summary():
     local_today = datetime.now(tz).date().isoformat()
 
     sets = get_specific_day(local_today, user_id)
-    muscle_counts = summarize_muscles(sets)
+    muscle_counts = summarize_muscles(sets, user_id)
 
     return render_template("summary.html", sets=sets, today=local_today,
                            muscle_counts=muscle_counts, settings=app_settings)
