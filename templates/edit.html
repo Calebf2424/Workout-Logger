@@ -45,14 +45,14 @@
               <input type="range"
                      id="weightRange" name="weight"
                      class="form-range flex-grow-1 me-2"
-                     min="0" max="1000" step="5"
+                     min="0" max="{{ settings.max_weight }}" step="5"
                      value="{{ set_data['weight'] }}"
                      oninput="syncWeightFromSlider()">
               <input type="number"
                      id="weightInput"
                      class="form-control text-center"
                      style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
-                     value="{{ set_data['weight'] }}" min="0" max="1000" step="5"
+                     value="{{ set_data['weight'] }}" min="0" max="{{ settings.max_weight }}" step="5"
                      onfocus="this.select()"
                      oninput="syncWeightFromInput()">
             </div>

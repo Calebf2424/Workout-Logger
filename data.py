@@ -78,7 +78,8 @@ preferred_order = [
 
 app_settings = {
     "rpe_enabled": False,
-    "timezone": "America/Edmonton"  # default to Edmonton
+    "timezone": "America/Edmonton",  # default to Edmonton
+    "max_weight": 225
 }
 
 

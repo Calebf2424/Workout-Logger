@@ -117,6 +117,7 @@ def settings():
     if request.method == "POST":
         app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
         app_settings["timezone"] = request.form.get("timezone", "UTC")
+        app_settings["max_weight"] = int(request.form.get("max_weight", 225))
         return redirect(url_for("index"))
 
     return render_template("settings.html", settings=app_settings, timezones=pytz.all_timezones)
