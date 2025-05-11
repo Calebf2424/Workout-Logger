@@ -65,7 +65,11 @@ def add_workout():
         reps = request.form.get("reps")
         weight = request.form.get("weight")
         rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
-        log_date = get_local_date()
+        tz_name = app_settings.get("timezone", "UTC")
+
+        tz = pytz.timezone(app_settings.get("timezone", "UTC"))
+        local_now = datetime.now(tz)
+        log_date = local_now.date().isoformat()
 
         insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, user_id)
         flash("Set added!")
@@ -115,9 +119,10 @@ def summary():
 def settings():
     if request.method == "POST":
         app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
-        app_settings["dark_mode"] = request.form.get("dark_mode") == "on"
+        app_settings["timezone"] = request.form.get("timezone", "UTC")
         return redirect(url_for("index"))
-    return render_template("settings.html", settings=app_settings)
+
+    return render_template("settings.html", settings=app_settings, timezones=pytz.all_timezones)
 
 @app.route("/delete-set/<int:set_id>", methods=["POST"])
 def delete_set_route(set_id):
@@ -234,8 +239,9 @@ def complete_set():
     weight   = float(request.form["weight"])
     rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
 
-    log_date = get_local_date()
-
+    tz = pytz.timezone(app_settings.get("timezone", "UTC"))
+    local_now = datetime.now(tz)
+    log_date = local_now.date().isoformat()
 
     insert_set(exercise, reps, weight, rpe, log_date, user_id)
 

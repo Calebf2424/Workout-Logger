@@ -1,62 +1,6 @@
-{% extends "base.html" %}
-{% block title %}Settings – Workout Tracker{% endblock %}
-
-{% block content %}
-  <style>
-    .form-switch .form-check-input {
-      width: 3rem;
-      height: 1.6rem;
-      background-color: #ffffff; /* white track by default */
-      border: 1px solid #0d6efd;
-      border-radius: 1.6rem;
-      position: relative;
-      appearance: none;
-      outline: none;
-      cursor: pointer;
-      transition: background-color 0.25s ease-in-out;
-    }
-
-    /* blue track when checked */
-    .form-switch .form-check-input:checked {
-      background-color: #0d6efd;
-    }
-
-    /* knob (blue by default) */
-    .form-switch .form-check-input::after {
-      content: "";
-      position: absolute;
-      top: 0.2rem;
-      left: 0.2rem;
-      width: 1.2rem;
-      height: 1.2rem;
-      border-radius: 50%;
-      background-color: #0d6efd;
-      transition: left 0.25s ease-in-out, background-color 0.25s ease-in-out;
-    }
-
-    /* white knob when checked */
-    .form-switch .form-check-input:checked::after {
-      left: 1.6rem;
-      background-color: #ffffff;
-    }
-
-    /* Discard button hover‑invert */
-    .btn-discard {
-      background: #dc3545;
-      color: #fff;
-    }
-    .btn-discard:hover,
-    .btn-discard:focus {
-      background: transparent;
-      color: #dc3545;
-      border: 1px solid #dc3545;
-    }
-  </style>
-
-
-  <div class="row justify-content-center w-100" style="max-width: 400px;">
-    <form action="{{ url_for('settings') }}" method="POST" class="w-100">
-    <!-- Toggles Card -->
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <form action="{{ url_for('settings') }}" method="POST" class="w-100">
+    <!-- Settings card -->
     <div class="col-12 mb-3">
       <div class="card home-card p-4">
         <!-- RPE toggle -->
@@ -67,15 +11,12 @@
         </div>
 
         <!-- Timezone selector -->
-        <div class="mb-2">
-          <label class="form-label fw-semibold">Timezone</label>
-          <select class="form-select" name="timezone" required>
-            {% for tz in [
-                "America/Edmonton", "America/Vancouver", "America/New_York",
-                "America/Chicago", "Europe/London", "Europe/Paris",
-                "Asia/Tokyo", "Asia/Calcutta", "Australia/Sydney"
-              ] %}
-              <option value="{{ tz }}" {% if settings.timezone == tz %}selected{% endif %}>
+        <div class="mb-3">
+          <label for="timezone" class="form-label fw-semibold">Time Zone</label>
+          <select id="timezone" name="timezone" class="form-select" required>
+            {% for tz in timezones %}
+              <option value="{{ tz }}"
+                      {% if settings.timezone == tz %}selected{% endif %}>
                 {{ tz }}
               </option>
             {% endfor %}
@@ -84,16 +25,15 @@
       </div>
     </div>
 
-      <!-- Action buttons card -->
-      <div class="col-12">
-        <div class="card home-card p-4 text-center">
-          <div class="d-grid gap-3">
-            <button type="button" class="btn btn-secondary py-2">Help</button>
-            <a href="{{ url_for('index') }}" class="btn btn-discard py-2">Discard</a>
-            <button type="submit" class="btn btn-primary py-2">Save &amp; Exit</button>
-          </div>
+    <!-- Buttons -->
+    <div class="col-12">
+      <div class="card home-card p-4 text-center">
+        <div class="d-grid gap-3">
+          <button type="button" class="btn btn-secondary py-2">Help</button>
+          <a href="{{ url_for('index') }}" class="btn btn-discard py-2">Discard</a>
+          <button type="submit" class="btn btn-primary py-2">Save &amp; Exit</button>
         </div>
       </div>
-    </form>
-  </div>
-{% endblock %}
+    </div>
+  </form>
+</div>

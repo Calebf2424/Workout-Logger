@@ -1,6 +1,4 @@
 from database import *
-from datetime import datetime
-import pytz
 #exercises on left associated muscle groups on right
 presaved_exercises = [
     {"name": "Hip Abduction Machine", "muscle": "Abductors"},
@@ -80,8 +78,9 @@ preferred_order = [
 
 app_settings = {
     "rpe_enabled": False,
-    "dark_mode": False
+    "timezone": "America/Edmonton"  # default to Edmonton
 }
+
 
 def summarize_muscles(sets, user_id):
     # Build master lookup
@@ -108,8 +107,3 @@ def register_custom_exercise(name, muscle, presaved_exercises, user_id):
 
     # Persist in DB
     insert_custom_exercise(name, muscle, user_id)
-
-def get_local_date():
-    user_tz = session.get("timezone", "UTC")
-    tz = pytz.timezone(user_tz)
-    return datetime.now(tz).date().isoformat()

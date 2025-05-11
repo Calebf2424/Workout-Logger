@@ -4,102 +4,95 @@
 {% block content %}
 <h1 class="text-white fw-bold display-1 mb-2 text-center">{{ exercise }}</h1>
 
-<!-- Progress Bar -->
-<div class="mb-4 w-100">
-  <div class="d-flex justify-content-between mb-1">
-    <small class="text-white fw-semibold">Progress</small>
-    <small class="text-white">{{ index }}/{{ total }}</small>
-  </div>
-  <div class="progress" style="height: 1rem; width: 100%;">
-    <div class="progress-bar bg-success"
-         role="progressbar"
-         style="width: {{ (index / total * 100) | round(0, 'floor') }}%;"
-         aria-valuenow="{{ index }}"
-         aria-valuemin="0"
-         aria-valuemax="{{ total }}">
+  <!-- Progress Bar -->
+  <div class="mb-4 w-100">
+    <div class="d-flex justify-content-between mb-1">
+      <small class="text-white fw-semibold">Progress</small>
+      <small class="text-white">{{ index }}/{{ total }}</small>
+    </div>
+    <div class="progress" style="height: 1rem; width: 100%;">
+      <div class="progress-bar bg-success"
+          role="progressbar"
+          style="width: {{ (index / total * 100) | round(0, 'floor') }}%;"
+          aria-valuenow="{{ index }}"
+          aria-valuemin="0"
+          aria-valuemax="{{ total }}">
+      </div>
     </div>
   </div>
-</div>
 
-<div class="row justify-content-center w-100" style="max-width: 400px;">
-  <div class="col-12">
-    <div class="card home-card p-4">
+  <div class="row justify-content-center w-100" style="max-width: 400px;">
+    <div class="col-12">
+      <div class="card home-card p-4">
 
-      <form action="{{ url_for('complete_set') }}" method="POST">
-        <input type="hidden" name="local_date" id="local_date">
-        <input type="hidden" name="exercise" value="{{ exercise }}">
-
-        <!-- Reps -->
-        <div class="mb-4">
-          <label for="reps" class="form-label fw-semibold">Reps</label>
-          <div class="input-group">
-            <button type="button" class="btn btn-outline-primary" onclick="change('reps', -1)">−</button>
-            <input type="number" id="reps" name="reps" class="form-control text-center" value="8" min="1" max="50">
-            <button type="button" class="btn btn-outline-primary" onclick="change('reps', 1)">+</button>
+        <form action="{{ url_for('complete_set') }}" method="POST">
+          <!-- Exercise is fixed -->
+          <input type="hidden" name="exercise" value="{{ exercise }}">
+          
+          <!-- Reps -->
+          <div class="mb-4">
+            <label for="reps" class="form-label fw-semibold">Reps</label>
+            <div class="input-group">
+              <button type="button" class="btn btn-outline-primary" onclick="change('reps', -1)">−</button>
+              <input type="number" id="reps" name="reps" class="form-control text-center" value="8" min="1" max="50">
+              <button type="button" class="btn btn-outline-primary" onclick="change('reps', 1)">+</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Weight -->
-        <div class="mb-4">
-          <label class="form-label fw-semibold">Weight (lbs)</label>
-          <div class="d-flex align-items-center">
-            <input type="range"
-                   id="weightRange" name="weight"
-                   class="form-range flex-grow-1 me-2"
-                   min="0" max="225" step="5"
-                   value="0"
-                   oninput="syncWeightFromSlider()">
-            <input type="number"
-                   id="weightInput"
-                   class="form-control text-center"
-                   style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
-                   value="0" min="0" max="1000" step="5"
-                   oninput="syncWeightFromInput()">
+          <!-- Weight -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Weight (lbs)</label>
+            <div class="d-flex align-items-center">
+              <input type="range"
+                    id="weightRange" name="weight"
+                    class="form-range flex-grow-1 me-2"
+                    min="0" max="225" step="5"
+                    value="0"
+                    oninput="syncWeightFromSlider()">
+              <input type="number"
+                    id="weightInput"
+                    class="form-control text-center"
+                    style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
+                    value="0" min="0" max="1000" step="5"
+                    onfocus="this.select()"
+                    oninput="syncWeightFromInput()">
+            </div>
           </div>
-        </div>
 
-        <!-- RPE -->
-        {% if settings.rpe_enabled %}
-        <div class="mb-4">
-          <label for="rpe" class="form-label fw-semibold">RPE</label>
-          <div class="input-group">
-            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
-            <input type="number" id="rpe" name="rpe" class="form-control text-center" value="" min="6" max="10" step="0.5">
-            <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
+          <!-- RPE (optional) -->
+          {% if settings.rpe_enabled %}
+            <div class="mb-4">
+              <label for="rpe" class="form-label fw-semibold">RPE</label>
+              <div class="input-group">
+                <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
+                <input type="number" id="rpe" name="rpe" class="form-control text-center" value="" min="6" max="10" step="0.5">
+                <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Buttons -->
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success w-100">✅ Completed Set</button>
           </div>
-        </div>
-        {% endif %}
+        </form>
 
-        <!-- Buttons -->
-        <div class="d-grid gap-2">
-          <button type="submit" class="btn btn-success w-100">✅ Completed Set</button>
-        </div>
-      </form>
-
-      <form action="{{ url_for('skip_set') }}" method="POST" class="d-grid gap-2 mt-3">
-        <button name="action" value="skip_later" class="btn btn-secondary w-100">⏭️ Skip for Now</button>
-        <button name="action" value="skip_today" class="btn btn-danger w-100">❌ Skip for Today</button>
-      </form>
+        <form action="{{ url_for('skip_set') }}" method="POST" class="d-grid gap-2 mt-3">
+          <button name="action" value="skip_later" class="btn btn-secondary w-100">⏭️ Skip for Now</button>
+          <button name="action" value="skip_today" class="btn btn-danger w-100">❌ Skip for Today</button>
+        </form>
+      </div>
+      {% if next_exercise %}
+        <p class="text-center text-white mt-4 fs-5">
+          <i class="bi bi-arrow-down-circle me-1"></i> Up next: <strong>{{ next_exercise }}</strong>
+        </p>
+      {% endif %}
     </div>
-
-    {% if next_exercise %}
-      <p class="text-center text-white mt-4 fs-5">
-        <i class="bi bi-arrow-down-circle me-1"></i> Up next: <strong>{{ next_exercise }}</strong>
-      </p>
-    {% endif %}
   </div>
-</div>
 {% endblock %}
 
 {% block page_scripts %}
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const input = document.getElementById("local_date");
-    const today = new Date();
-    input.value = today.toISOString().split("T")[0];
-    syncWeightFromSlider();
-  });
-
   function change(id, delta) {
     const input = document.getElementById(id);
     let val = parseInt(input.value) || 0;
@@ -113,25 +106,31 @@
     val = Math.min(10, Math.max(6, val + delta));
     input.value = val.toFixed(1);
   }
+  document.addEventListener('DOMContentLoaded', () => {
+  syncWeightFromSlider(); // set initial display
+});
 
-  function syncWeightFromSlider() {
-    const slider = document.getElementById('weightRange');
-    const input = document.getElementById('weightInput');
-    const val = parseInt(slider.value, 10);
-    input.value = val;
+function syncWeightFromSlider() {
+  const slider = document.getElementById('weightRange');
+  const input  = document.getElementById('weightInput');
+  const val    = parseInt(slider.value, 10);
+  input.value = val;
 
-    const pct = (val - slider.min) / (slider.max - slider.min) * 100;
-    slider.style.setProperty('--pct', pct + '%');
-  }
+  // Optional: Visual fill effect
+  const pct = (val - slider.min) / (slider.max - slider.min) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+}
 
-  function syncWeightFromInput() {
-    const slider = document.getElementById('weightRange');
-    let val = parseInt(document.getElementById('weightInput').value, 10);
-    if (isNaN(val)) val = slider.min;
-    val = Math.min(slider.max, Math.max(slider.min, val));
-    document.getElementById('weightInput').value = val;
-    slider.value = val;
-    syncWeightFromSlider();
-  }
+function syncWeightFromInput() {
+  const slider = document.getElementById('weightRange');
+  let val = parseInt(document.getElementById('weightInput').value, 10);
+  if (isNaN(val)) val = slider.min;
+  val = Math.min(slider.max, Math.max(slider.min, val));
+  document.getElementById('weightInput').value = val;
+  slider.value = val;
+  syncWeightFromSlider();
+}
+
 </script>
+
 {% endblock %}
