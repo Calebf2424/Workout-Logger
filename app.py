@@ -28,13 +28,6 @@ def require_guest():
     if "guest_id" not in session:
         return redirect(url_for("landing"))
 
-@app.route("/set-timezone", methods=["POST"])
-def set_timezone():
-    data = request.get_json()
-    if data and "timezone" in data:
-        session["timezone"] = data["timezone"]
-    return ("", 204)  # no content
-
 @app.route("/landing")
 def landing():
     return render_template("landing.html")
@@ -108,11 +101,15 @@ def history():
 
 @app.route("/summary")
 def summary():
-    today = date.today().isoformat()
     user_id = get_user_id_by_guest(session["guest_id"])
-    sets = get_specific_day(today, user_id)
-    muscle_counts = summarize_muscles(sets, user_id)
-    return render_template("summary.html", sets=sets, today=today,
+    tzname = app_settings.get("timezone", "America/Edmonton")
+    tz = pytz.timezone(tzname)
+    local_today = datetime.now(tz).date().isoformat()
+
+    sets = get_specific_day(local_today, user_id)
+    muscle_counts = summarize_muscles(sets)
+
+    return render_template("summary.html", sets=sets, today=local_today,
                            muscle_counts=muscle_counts, settings=app_settings)
 
 @app.route("/settings", methods=["GET", "POST"])

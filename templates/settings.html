@@ -1,31 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Settings – Workout Tracker{% endblock %}
+
+{% block content %}
+<style>
+  .form-switch .form-check-input {
+    width: 3rem;
+    height: 1.6rem;
+    background-color: #ffffff;
+    border: 1px solid #0d6efd;
+    border-radius: 1.6rem;
+    position: relative;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: background-color 0.25s ease-in-out;
+  }
+
+  .form-switch .form-check-input:checked {
+    background-color: #0d6efd;
+  }
+
+  .form-switch .form-check-input::after {
+    content: "";
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 50%;
+    background-color: #0d6efd;
+    transition: left 0.25s ease-in-out, background-color 0.25s ease-in-out;
+  }
+
+  .form-switch .form-check-input:checked::after {
+    left: 1.6rem;
+    background-color: #ffffff;
+  }
+
+  .btn-discard {
+    background: #dc3545;
+    color: #fff;
+  }
+  .btn-discard:hover,
+  .btn-discard:focus {
+    background: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+  }
+</style>
+
 <div class="row justify-content-center w-100" style="max-width: 400px;">
   <form action="{{ url_for('settings') }}" method="POST" class="w-100">
-    <!-- Settings card -->
+    
+    <!-- Toggles + Timezone -->
     <div class="col-12 mb-3">
       <div class="card home-card p-4">
+        
         <!-- RPE toggle -->
         <div class="form-check form-switch d-flex justify-content-between align-items-center mb-3">
           <label class="form-check-label fs-5 mb-0" for="rpeSwitch">Enable RPE</label>
           <input type="checkbox" class="form-check-input" id="rpeSwitch" name="rpe_enabled"
-                {% if settings.rpe_enabled %}checked{% endif %}>
+                 {% if settings.rpe_enabled %}checked{% endif %}>
         </div>
 
         <!-- Timezone selector -->
-        <div class="mb-3">
-          <label for="timezone" class="form-label fw-semibold">Time Zone</label>
-          <select id="timezone" name="timezone" class="form-select" required>
+        <div class="mb-2">
+          <label for="timezone" class="form-label fw-semibold">Timezone</label>
+          <select name="timezone" id="timezone" class="form-select">
             {% for tz in timezones %}
-              <option value="{{ tz }}"
-                      {% if settings.timezone == tz %}selected{% endif %}>
+              <option value="{{ tz }}" {% if settings.timezone == tz %}selected{% endif %}>
                 {{ tz }}
               </option>
             {% endfor %}
           </select>
         </div>
+
       </div>
     </div>
 
-    <!-- Buttons -->
+    <!-- Action Buttons -->
     <div class="col-12">
       <div class="card home-card p-4 text-center">
         <div class="d-grid gap-3">
@@ -35,5 +88,7 @@
         </div>
       </div>
     </div>
+
   </form>
 </div>
+{% endblock %}
