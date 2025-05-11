@@ -58,6 +58,9 @@ def add_workout():
         weight = request.form.get("weight")
         rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
         log_date = request.form.get("local_date")
+        if not log_date:
+            log_date = date.today().isoformat()  # fallback
+
 
 
         insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, user_id)
@@ -228,6 +231,10 @@ def complete_set():
     rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
 
     log_date = request.form.get("local_date")
+    log_date = request.form.get("local_date")
+    if not log_date:
+        log_date = date.today().isoformat()  # fallback
+
     insert_set(exercise, reps, weight, rpe, log_date, user_id)
 
     routine["current_index"] = idx + 1

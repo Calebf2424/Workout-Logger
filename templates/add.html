@@ -30,8 +30,9 @@
   <div class="row justify-content-center w-100" style="max-width: 400px;">
     <div class="col-12">
       <div class="card home-card p-4">
-        <form action="{{ url_for('add_workout') }}" method="POST">
+        <form action="{{ url_for('add_workout') }}" method="POST" onsubmit="return setDateBeforeSubmit();">
           <input type="hidden" name="local_date" id="local_date">
+
           <!-- Exercise selector -->
           <div class="mb-4">
             <label for="exercise" class="form-label fw-semibold">Exercise</label>
@@ -64,35 +65,31 @@
             </div>
           </div>
 
-          <!-- Reps steppers + editable -->
+          <!-- Reps -->
           <div class="mb-4">
             <label for="reps" class="form-label fw-semibold">Number of Reps</label>
             <div class="d-flex justify-content-center">
               <div class="input-group" style="width:100%; max-width:350px;">
-                <button type="button" class="btn btn-outline-primary"
-                        onclick="change('reps', -1)">−</button>
+                <button type="button" class="btn btn-outline-primary" onclick="change('reps', -1)">−</button>
                 <input type="number" id="reps" name="reps"
                        class="form-control text-center"
                        value="5" min="1" max="20" step="1"
                        onfocus="if(this.value==='5') this.value='';"
                        oninput="clamp('reps')">
-                <button type="button" class="btn btn-outline-primary"
-                        onclick="change('reps', 1)">+</button>
+                <button type="button" class="btn btn-outline-primary" onclick="change('reps', 1)">+</button>
               </div>
             </div>
           </div>
 
-          <!-- Weight slider + inline editable pill -->
+          <!-- Weight -->
           <div class="mb-4">
             <label class="form-label fw-semibold">Weight (lbs)</label>
             <div class="d-flex align-items-center">
-              <input type="range"
-                     id="weightRange" name="weight"
+              <input type="range" id="weightRange" name="weight"
                      class="form-range flex-grow-1 me-2"
                      min="0" max="225" step="5" value="100"
                      oninput="syncWeightFromSlider()">
-              <input type="number"
-                     id="weightInput"
+              <input type="number" id="weightInput"
                      class="form-control text-center"
                      style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
                      value="100" min="0" max="1000" step="5"
@@ -101,21 +98,19 @@
             </div>
           </div>
 
-          <!-- Optional RPE steppers + editable -->
+          <!-- RPE -->
           {% if settings.rpe_enabled %}
             <div class="mb-4">
               <label for="rpe" class="form-label fw-semibold">RPE</label>
               <div class="d-flex justify-content-center">
                 <div class="input-group" style="width:100%; max-width:350px;">
-                  <button type="button" class="btn btn-outline-primary"
-                          onclick="changeFloat('rpe', -0.5)">−</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', -0.5)">−</button>
                   <input type="number" id="rpe" name="rpe"
                          class="form-control text-center"
                          value="8" min="6" max="10" step="0.5"
                          onfocus="if(this.value==='8') this.value='';"
                          oninput="clamp('rpe')">
-                  <button type="button" class="btn btn-outline-primary"
-                          onclick="changeFloat('rpe', 0.5)">+</button>
+                  <button type="button" class="btn btn-outline-primary" onclick="changeFloat('rpe', 0.5)">+</button>
                 </div>
               </div>
             </div>
@@ -135,78 +130,76 @@
 {% endblock %}
 
 {% block page_scripts %}
-  <!-- Choices.js -->
-  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('select[data-choices]').forEach(el => {
-        if (el.choices) el.choices.destroy();
-        el.choices = new Choices(el, {
-          searchEnabled: true,
-          shouldSort: false,
-          itemSelectText: ''
-        });
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('select[data-choices]').forEach(el => {
+      if (el.choices) el.choices.destroy();
+      el.choices = new Choices(el, {
+        searchEnabled: true,
+        shouldSort: false,
+        itemSelectText: ''
       });
-
-      // Initialize weight slider fill
-      syncWeightFromSlider();
     });
+    syncWeightFromSlider();
+  });
 
-    function change(field, delta) {
-      const el = document.getElementById(field);
-      let val = parseFloat(el.value) || 0;
-      val = Math.min(el.max, Math.max(el.min, val + delta));
-      el.value = val;
+  function change(field, delta) {
+    const el = document.getElementById(field);
+    let val = parseFloat(el.value) || 0;
+    val = Math.min(el.max, Math.max(el.min, val + delta));
+    el.value = val;
+  }
+
+  function changeFloat(field, delta) { change(field, delta); }
+
+  function clamp(field) {
+    const el = document.getElementById(field);
+    const raw = el.value.trim();
+    if (raw === '') return;
+    let val = parseFloat(raw);
+    if (isNaN(val) || val < el.min) val = el.min;
+    if (val > el.max)               val = el.max;
+    el.value = val;
+  }
+
+  function syncWeightFromSlider() {
+    const slider = document.getElementById('weightRange');
+    const input  = document.getElementById('weightInput');
+    const val    = parseInt(slider.value, 10);
+    input.value = val;
+    const pct = (val - slider.min) / (slider.max - slider.min) * 100;
+    slider.style.setProperty('--pct', pct + '%');
+  }
+
+  function syncWeightFromInput() {
+    const slider = document.getElementById('weightRange');
+    let val = parseInt(document.getElementById('weightInput').value, 10);
+    if (isNaN(val)) val = slider.min;
+    val = Math.min(slider.max, Math.max(slider.min, val));
+    document.getElementById('weightInput').value = val;
+    slider.value = val;
+    syncWeightFromSlider();
+  }
+
+  function toggleCustomExercise(value) {
+    const cf = document.getElementById('custom-fields');
+    if (value === '__custom__') {
+      cf.style.display = 'block';
+      document.getElementById('custom_name').required = true;
+      document.getElementById('custom_muscle').required = true;
+    } else {
+      cf.style.display = 'none';
+      document.getElementById('custom_name').required = false;
+      document.getElementById('custom_muscle').required = false;
     }
-    function changeFloat(field, delta) { change(field, delta); }
-    function clamp(field) {
-      const el  = document.getElementById(field);
-      const raw = el.value.trim();
+  }
 
-      // if the field is blank, bail out and let the user type
-      if (raw === '') return;
-
-      // otherwise parse & clamp
-      let val = parseFloat(raw);
-      if (isNaN(val) || val < el.min) val = el.min;
-      if (val > el.max)               val = el.max;
-      el.value = val;
-    }   
-    function syncWeightFromSlider() {
-      const slider = document.getElementById('weightRange');
-      const input  = document.getElementById('weightInput');
-      const val    = parseInt(slider.value, 10);
-      input.value = val;
-      const pct = (val - slider.min) / (slider.max - slider.min) * 100;
-      slider.style.setProperty('--pct', pct + '%');
-    }
-    function syncWeightFromInput() {
-      const slider = document.getElementById('weightRange');
-      let val = parseInt(document.getElementById('weightInput').value, 10);
-      if (isNaN(val)) val = slider.min;
-      val = Math.min(slider.max, Math.max(slider.min, val));
-      document.getElementById('weightInput').value = val;
-      slider.value = val;
-      syncWeightFromSlider();
-    }
-
-    function toggleCustomExercise(value) {
-      const cf = document.getElementById('custom-fields');
-      if (value === '__custom__') {
-        cf.style.display = 'block';
-        document.getElementById('custom_name').required = true;
-        document.getElementById('custom_muscle').required = true;
-      } else {
-        cf.style.display = 'none';
-        document.getElementById('custom_name').required = false;
-        document.getElementById('custom_muscle').required = false;
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const input = document.getElementById("local_date");
-      const today = new Date();
-      input.value = today.toISOString().split("T")[0]; // YYYY-MM-DD
-    });
-  </script>
+  function setDateBeforeSubmit() {
+    const input = document.getElementById("local_date");
+    const today = new Date();
+    input.value = today.toISOString().split("T")[0];
+    return true;
+  }
+</script>
 {% endblock %}

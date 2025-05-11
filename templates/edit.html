@@ -8,7 +8,7 @@
     <div class="col-12">
       <div class="card home-card p-4">
 
-        <form action="{{ url_for('edit_set_route', set_id=set_data[0]) }}" method="POST">
+        <form action="{{ url_for('edit_set_route', set_id=set_data['id']) }}" method="POST">
           <input type="hidden" name="origin" value="{{ origin }}">
           {% if origin == 'history' %}
             <input type="hidden" name="date" value="{{ date_param }}">
@@ -17,7 +17,7 @@
           <!-- 1) Locked Exercise Name -->
           <div class="mb-4 text-center">
             <label class="form-label fw-semibold">Exercise</label>
-            <div class="fs-5">{{ set_data[1] }}</div>
+            <div class="fs-5">{{ set_data["exercise"] }}</div>
           </div>
 
           <!-- 2) Reps steppers + editable -->
@@ -29,7 +29,7 @@
                         onclick="change('reps', -1)">−</button>
                 <input type="number" id="reps" name="reps"
                        class="form-control text-center"
-                       value="{{ set_data[2] }}" min="1" max="20" step="1"
+                       value="{{ set_data['reps'] }}" min="1" max="20" step="1"
                        onfocus="this.select()"
                        oninput="clamp('reps')">
                 <button type="button" class="btn btn-outline-primary"
@@ -46,13 +46,13 @@
                      id="weightRange" name="weight"
                      class="form-range flex-grow-1 me-2"
                      min="0" max="1000" step="5"
-                     value="{{ set_data[3] }}"
+                     value="{{ set_data['weight'] }}"
                      oninput="syncWeightFromSlider()">
               <input type="number"
                      id="weightInput"
                      class="form-control text-center"
                      style="width:80px; border-radius:1rem; padding:.375rem .75rem;"
-                     value="{{ set_data[3] }}" min="0" max="1000" step="5"
+                     value="{{ set_data['weight'] }}" min="0" max="1000" step="5"
                      onfocus="this.select()"
                      oninput="syncWeightFromInput()">
             </div>
@@ -68,7 +68,7 @@
                           onclick="changeFloat('rpe', -0.5)">−</button>
                   <input type="number" id="rpe" name="rpe"
                          class="form-control text-center"
-                         value="{{ set_data[4] if set_data[4] is not none else '' }}"
+                         value="{{ set_data['rpe'] if set_data['rpe'] is not none else '' }}"
                          min="6" max="10" step="0.5"
                          onfocus="this.select()"
                          oninput="clamp('rpe')">
@@ -134,7 +134,6 @@
       const input  = document.getElementById('weightInput');
       const val    = parseInt(slider.value, 10);
       input.value = val;
-      // update track fill
       const pct = (val - slider.min) / (slider.max - slider.min) * 100;
       slider.style.setProperty('--pct', pct + '%');
     }
