@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session  # type: ignore
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+import pytz
 import uuid
 from dotenv import load_dotenv #type: ignore
 import os
@@ -26,6 +27,13 @@ def require_guest():
         return
     if "guest_id" not in session:
         return redirect(url_for("landing"))
+
+@app.route("/set-timezone", methods=["POST"])
+def set_timezone():
+    data = request.get_json()
+    if data and "timezone" in data:
+        session["timezone"] = data["timezone"]
+    return ("", 204)  # no content
 
 @app.route("/landing")
 def landing():
@@ -57,7 +65,7 @@ def add_workout():
         reps = request.form.get("reps")
         weight = request.form.get("weight")
         rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
-        log_date = request.form.get("local_date", date.today().isoformat())
+        log_date = get_local_date()
 
         insert_set(exercise, int(reps), int(weight), float(rpe) if rpe else None, log_date, user_id)
         flash("Set added!")
@@ -226,7 +234,7 @@ def complete_set():
     weight   = float(request.form["weight"])
     rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
 
-    log_date = request.form.get("local_date", date.today().isoformat())
+    log_date = get_local_date()
 
 
     insert_set(exercise, reps, weight, rpe, log_date, user_id)
@@ -388,3 +396,13 @@ def skip_set():
     session["active_routine"] = routine
     
     return redirect(url_for("workout_mode"))
+
+
+
+
+
+#funcs
+def get_local_date():
+    user_tz = session.get("timezone", "UTC")
+    tz = pytz.timezone(user_tz)
+    return datetime.now(tz).date().isoformat()

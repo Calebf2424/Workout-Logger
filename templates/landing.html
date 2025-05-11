@@ -14,4 +14,23 @@
 </form>
 
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Only send if session doesn't already have timezone (prevent loops)
+    if (!document.cookie.includes("tz_set=true")) {
+      fetch("/set-timezone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timezone: tz })
+      }).then(() => {
+        document.cookie = "tz_set=true; path=/";
+        location.reload(); // reload to re-enter with timezone session set
+      });
+    }
+  });
+</script>
+
 {% endblock %}
