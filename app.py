@@ -80,7 +80,7 @@ def history():
     if chosen_date:
         user_id = get_user_id_by_guest(session["guest_id"])
         sets = get_specific_day(chosen_date, user_id)
-        muscle_counts = summarize_muscles(sets)
+        muscle_counts = summarize_muscles(sets, user_id)
 
         dt = date.fromisoformat(chosen_date)
         prev_date = (dt - timedelta(days=1)).isoformat()
@@ -99,7 +99,7 @@ def summary():
     today = date.today().isoformat()
     user_id = get_user_id_by_guest(session["guest_id"])
     sets = get_specific_day(today, user_id)
-    muscle_counts = summarize_muscles(sets)
+    muscle_counts = summarize_muscles(sets, user_id)
     return render_template("summary.html", sets=sets, today=today,
                            muscle_counts=muscle_counts, settings=app_settings)
 
@@ -355,7 +355,7 @@ def preview_routine(routine_id):
                                         "sets": 1
                                         })
 
-    muscle_counts = summarize_muscles(routine_sets_expanded)
+    muscle_counts = summarize_muscles(routine_sets_expanded, user_id)
 
     return render_template(
         "preview_routine.html",
