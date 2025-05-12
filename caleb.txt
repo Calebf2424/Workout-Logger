@@ -1,6 +1,0 @@
-#run in debug
-flask run
-
-#run on local net
-flask run --host=0.0.0.0
-
