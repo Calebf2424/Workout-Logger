@@ -201,3 +201,12 @@ def update_routine_set_position(set_id, position):
                 SET position = %s
                 WHERE id = %s
             """, (position, set_id))
+
+def wipe_all_user_data():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM sets;")
+            cur.execute("DELETE FROM custom_exercises;")
+            cur.execute("DELETE FROM routine_sets;")
+            cur.execute("DELETE FROM planned_routines;")
+            cur.execute("DELETE FROM users;")
