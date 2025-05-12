@@ -3,14 +3,12 @@
 
 {% block content %}
 <div class="d-flex flex-column align-items-center justify-content-center vh-100 w-100 px-3">
-
   <div class="card home-card text-center p-5" style="max-width: 400px; width: 100%;">
-    <h1 class="fw-bold mb-3"> Workout Tracker</h1>
-    <p class="text-muted mb-4">Track your progress, one set at a time.</p>
+    <h1 class="fw-bold mb-3">Workout Tracker</h1>
 
-    <form action="{{ url_for('create_guest') }}" method="POST">
-      <button type="submit" class="btn btn-primary w-100 py-2 fs-5">
-         Start as Guest
+    <form id="guestForm" action="{{ url_for('create_guest') }}" method="POST">
+      <button id="guestBtn" type="submit" class="btn btn-primary w-100 py-2 fs-5">
+        Start as Guest
       </button>
     </form>
 
@@ -18,22 +16,58 @@
       User accounts coming in a future update.
     </p>
   </div>
-
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!document.cookie.includes("tz_set=true")) {
-      fetch("/set-timezone", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timezone: tz })
-      }).then(() => {
-        document.cookie = "tz_set=true; path=/";
-        location.reload();
-      });
+  const storageKey = "workout_guest_id";
+  const form = document.getElementById("guestForm");
+  const button = document.getElementById("guestBtn");
+
+  async function tryRestoreSession() {
+    const storedId = localStorage.getItem(storageKey);
+    const hasSession = document.cookie.includes("session=");
+
+    if (storedId && !hasSession) {
+      try {
+        const res = await fetch("/restore-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ guest_id: storedId })
+        });
+
+        if (res.ok) {
+          window.location.href = "/";
+        }
+      } catch (err) {
+        console.error("Session restore failed:", err);
+      }
     }
+  }
+
+  async function handleGuestCreation(e) {
+    e.preventDefault();
+    button.disabled = true; // prevent double click
+
+    try {
+      const res = await fetch(form.action, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+
+      const data = await res.json();
+      if (data.guest_id) {
+        localStorage.setItem(storageKey, data.guest_id);
+        window.location.href = "/";
+      }
+    } catch (err) {
+      console.error("Guest creation failed:", err);
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    tryRestoreSession();
+    form.addEventListener("submit", handleGuestCreation);
   });
 </script>
 {% endblock %}

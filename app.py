@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session  # type: ignore
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify  # type: ignore
 from datetime import date, timedelta, datetime
-import pytz
+import pytz                                                                           # type: ignore
 import uuid
-from dotenv import load_dotenv #type: ignore
+from dotenv import load_dotenv                                                        # type: ignore
 import os
 
 from database import *
@@ -22,7 +22,7 @@ create_routine_sets_table()
 # --- SESSION HANDLING ---
 @app.before_request
 def require_guest():
-    allowed_routes = {"static", "landing", "create_guest"}
+    allowed_routes = {"static", "landing", "create_guest", "restore_session"}
     if request.endpoint in allowed_routes:
         return
     if "guest_id" not in session:
@@ -37,7 +37,22 @@ def create_guest():
     guest_id = f"guest_{uuid.uuid4().hex[:8]}"
     session["guest_id"] = guest_id
     create_guest_user(guest_id)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"guest_id": guest_id})
+
     return redirect(url_for("index"))
+
+@app.route("/restore-session", methods=["POST"])
+def restore_session():
+    data = request.get_json()
+    guest_id = data.get("guest_id")
+
+    if guest_id:
+        session["guest_id"] = guest_id
+        create_guest_user(guest_id)
+        return jsonify({"status": "ok"})
+    return jsonify({"status": "missing"}), 400
 
 # --- CORE ROUTES ---
 @app.route("/")
