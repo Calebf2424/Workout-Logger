@@ -13,7 +13,6 @@ load_dotenv()
 app.secret_key = os.environ.get("SECRET_KEY", "fallback-dev-key")
 
 # --- TABLE CREATION ---
-wipe_all_user_data()
 create_users_table()
 create_sets_table()
 create_custom_exercise_table()
