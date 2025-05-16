@@ -416,9 +416,17 @@ def skip_set():
     
     return redirect(url_for("workout_mode"))
 
+@app.route("/dev")
+def dev_page():
+    return render_template("dev.html")
 
-
-
+@app.route("/dev/user-count")
+def dev_user_count():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM users WHERE is_guest = TRUE")
+            count = cur.fetchone()["count"]
+            return jsonify({"guest_user_count": count})
 
 #funcs
 def get_local_date():
