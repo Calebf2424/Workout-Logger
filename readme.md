@@ -1,15 +1,30 @@
-# Workout Logger
+# Workout Tracker – Flask Web App
 
-A simple Flask-based web app for tracking your workouts, sets, reps, weight, and RPE.  
-Allows you to add both preset and custom exercises, view your workout history, edit or delete individual sets, and toggle RPE on or off.
+A mobile-friendly, full-stack fitness tracking app built with Flask and PostgreSQL. Users can log workouts in real-time or follow preplanned routines, track sets, and visualize which muscle groups were trained on each day.
 
----
+## Features
 
-## 🚀 Features
+- **Preplanned workout routines** with step-by-step guided logging
+- **Manual workout logging** for flexible input on the fly
+- **Muscle group summary view** showing which muscles were trained and how many sets per group
+- **Progressive Web App (PWA)** support for mobile use
+- **Custom exercises** with muscle group assignment
+- **Auto-logging to current date** for seamless history tracking
 
-- **Add Sets**: Log exercise name, reps, weight, and (optional) RPE.  
-- **Preset & Custom Exercises**: Choose from a built-in list or add your own with associated muscle group.  
-- **Workout Summary**: See today’s workout at a glance, grouped by muscle.  
-- **History by Date**: Pick any past date to review and edit your sets.  
-- **Edit & Delete**: Modify or remove individual sets, with a confirmation prompt.  
-- **Settings**: Toggle RPE on/off and (in the future) more preferences.
+## Tech Stack
+
+- **Backend:** Python, Flask
+- **Database:** SQLite (dev), PostgreSQL (live)
+- **Frontend:** HTML, CSS (Bootstrap), Jinja2
+- **Deployment:** Render.com
+
+## Live Demo
+
+[Workout Tracker on Render](https://workout-tracker-scjm.onrender.com)
+
+## Future Plans
+
+- User authentication and saved profiles
+- Muscle group heatmap at end of workout
+- Data export options
+- Workout planner assistant
