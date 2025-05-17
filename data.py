@@ -21,6 +21,7 @@ presaved_exercises = [
     {"name": "Machine Chest Press", "muscle": "Chest"},
     {"name": "Smith Machine Bench Press", "muscle": "Chest"},
     {"name": "Bench Press", "muscle": "Chest"},
+    {"name": "Dumbbell Bench Press", "muscle": "Chest"},
     {"name": "Chest Fly", "muscle": "Chest"},
     {"name": "Push-Up", "muscle": "Chest"},
     {"name": "Back Extension Machine", "muscle": "Erectors"},
