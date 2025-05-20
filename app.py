@@ -175,7 +175,9 @@ def history():
                                display_date=display_date,
                                muscle_counts=muscle_counts, settings=app_settings)
 
-    return render_template("history.html", sets=None, chosen_date=None)
+    return render_template("history.html", sets=None, chosen_date=None,
+                       muscle_counts={}, settings=app_settings)
+
 
 @app.route("/summary")
 def summary():
