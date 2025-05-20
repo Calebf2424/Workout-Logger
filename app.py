@@ -68,7 +68,7 @@ def register():
             flash("Account created successfully!", "success")
             return redirect(url_for("index"))
         else:
-            flash("Something went wrong during registration.", "danger")
+            flash("Registration failed.", "danger")
 
     return render_template("register.html")
 
