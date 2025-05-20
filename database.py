@@ -202,6 +202,7 @@ def update_routine_set_position(set_id, position):
                 WHERE id = %s
             """, (position, set_id))
 
+
 def create_user_account(username, password_hash, email, guest_id=None):
     with get_connection() as conn:
         with conn.cursor() as cur:

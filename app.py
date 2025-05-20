@@ -118,7 +118,7 @@ def index():
 
 @app.route("/add-workout", methods=["GET", "POST"])
 def add_workout():
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     if request.method == "POST":
         exercise = request.form.get("exercise")
         if exercise == "__custom__":
@@ -155,7 +155,7 @@ def history():
         chosen_date = request.args.get("date")
 
     if chosen_date:
-        user_id = get_user_id_by_guest(session["guest_id"])
+        user_id = get_current_user_id()
         sets = get_specific_day(chosen_date, user_id)
         muscle_counts = summarize_muscles(sets, user_id)
 
@@ -173,7 +173,7 @@ def history():
 
 @app.route("/summary")
 def summary():
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     tzname = app_settings.get("timezone", "America/Edmonton")
     tz = pytz.timezone(tzname)
     local_today = datetime.now(tz).date().isoformat()
@@ -238,7 +238,7 @@ def premade():
             routine_id = int(action.replace("delete_", ""))
             delete_routine(routine_id)
             return redirect(url_for("premade"))
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     routines = get_all_routines(user_id)
     return render_template("premade.html", routines=routines)
 
@@ -303,7 +303,7 @@ def complete_set():
 
     idx = routine["current_index"]
     current = routine["sets"][idx]
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     exercise = current["exercise"]
     reps     = int(request.form["reps"])
     weight   = float(request.form["weight"])
@@ -322,12 +322,12 @@ def complete_set():
 
 @app.route("/create-routine", methods=["GET", "POST"])
 def create_routine():
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
 
     if request.method == "POST":
         action = request.form.get("action")
-        user_id = get_user_id_by_guest(session["guest_id"])
+        user_id = get_current_user_id()
         # STEP 1 — Create the routine
         if action == "add":
             if "new_routine" not in session:
@@ -427,7 +427,7 @@ def reorder_routine_sets():
 
 @app.route("/preview-routine/<int:routine_id>")
 def preview_routine(routine_id):
-    user_id = get_user_id_by_guest(session["guest_id"])
+    user_id = get_current_user_id()
     routine_sets = get_sets_for_routine(routine_id)
 
     routine_name = next((r["name"] for r in get_all_routines(user_id) if r["id"] == routine_id), "Unnamed Routine")
@@ -498,3 +498,6 @@ def get_local_date():
     user_tz = session.get("timezone", "UTC")
     tz = pytz.timezone(user_tz)
     return datetime.now(tz).date().isoformat()
+
+def get_current_user_id():
+    return session.get("user_id") or get_user_id_by_guest(session.get("guest_id"))
