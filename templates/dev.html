@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,9 +6,16 @@
 </head>
 <body>
     <h1>Dev Dashboard</h1>
+
     <p>Guest Users: <span id="user-count">Loading...</span></p>
 
+    <h2>Registered Usernames</h2>
+    <ul id="usernames">
+        <li>Loading...</li>
+    </ul>
+
     <script>
+        // Fetch guest user count
         fetch("/dev/user-count")
             .then(res => res.json())
             .then(data => {
@@ -16,6 +23,28 @@
             })
             .catch(err => {
                 document.getElementById("user-count").textContent = "Error loading";
+                console.error(err);
+            });
+
+        // Fetch usernames
+        fetch("/dev/usernames")
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById("usernames");
+                list.innerHTML = ""; // Clear loading text
+
+                if (data.usernames.length === 0) {
+                    list.innerHTML = "<li><em>No usernames found</em></li>";
+                } else {
+                    data.usernames.forEach(name => {
+                        const li = document.createElement("li");
+                        li.textContent = name;
+                        list.appendChild(li);
+                    });
+                }
+            })
+            .catch(err => {
+                document.getElementById("usernames").innerHTML = "<li>Error loading</li>";
                 console.error(err);
             });
     </script>

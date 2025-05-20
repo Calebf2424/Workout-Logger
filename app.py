@@ -482,6 +482,14 @@ def dev_user_count():
             count = cur.fetchone()["count"]
             return jsonify({"guest_user_count": count})
 
+@app.route("/dev/usernames")
+def dev_usernames():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT username FROM users WHERE username IS NOT NULL ORDER BY username")
+            names = [row["username"] for row in cur.fetchall()]
+    return jsonify({"usernames": names})
+
 #funcs
 def get_local_date():
     user_tz = session.get("timezone", "UTC")
