@@ -33,7 +33,7 @@
       <form action="{{ url_for('register') }}" method="POST">
         <div class="mb-3">
           <label for="username" class="form-label fw-semibold">Username</label>
-          <input type="text" name="username" id="username" class="form-control" required>
+          <input type="text" name="username" class="form-control" required minlength="5">
         </div>
 
         <div class="mb-3">

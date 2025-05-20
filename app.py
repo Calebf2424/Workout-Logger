@@ -50,6 +50,9 @@ def register():
         username = request.form.get("username").strip()
         password = request.form.get("password")
         email    = request.form.get("email").strip()
+        if len(username) < 5:
+            flash("Username must be at least 5 characters long.", "danger")
+            return redirect(url_for("register"))
 
         if get_user_by_username(username):
             flash("Username already taken.", "danger")
