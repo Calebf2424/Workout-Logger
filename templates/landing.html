@@ -75,4 +75,25 @@
     form.addEventListener("submit", handleGuestCreation);
   });
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.cookie.includes("clear_guest_id=1")) {
+      localStorage.removeItem("workout_guest_id");
+      document.cookie = "clear_guest_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    }
+
+    // Restore session only if guest_id still exists
+    const storedId = localStorage.getItem("workout_guest_id");
+    const hasSession = document.cookie.includes("session=");
+    if (storedId && !hasSession) {
+      fetch("/restore-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ guest_id: storedId })
+      }).then(res => {
+        if (res.ok) window.location.href = "/";
+      });
+    }
+  });
+</script>
 {% endblock %}
