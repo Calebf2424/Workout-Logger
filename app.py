@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify  # type: ignore
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response  # type: ignore
 from werkzeug.security import generate_password_hash, check_password_hash                       # type: ignore
 from datetime import date, timedelta, datetime
 import pytz                                                                           # type: ignore
@@ -69,7 +69,11 @@ def register():
             session["user_id"] = new_user_id
             session["is_guest"] = False
             flash("Account created successfully!", "success")
-            return redirect(url_for("index"))
+
+            # Tell frontend to remove guest ID from localStorage
+            response = make_response(redirect(url_for("index")))
+            response.set_cookie("clear_guest_id", "1", max_age=5, path="/")
+            return response
         else:
             flash("Registration failed.", "danger")
 

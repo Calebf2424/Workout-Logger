@@ -61,4 +61,26 @@
     </div>
   </div>
 </div>
+
+<script>
+  // On page load, check for the cookie that indicates we should clear guest ID
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.cookie.includes("clear_guest_id=1")) {
+      localStorage.removeItem("workout_guest_id");
+
+      // Expire the cookie immediately so it doesn't run again
+      document.cookie = "clear_guest_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    }
+  });
+</script>
+<script>
+  document.querySelector("form").addEventListener("submit", function (e) {
+    const pwd = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm").value;
+    if (pwd !== confirm) {
+      e.preventDefault();
+      alert("Passwords do not match.");
+    }
+  });
+</script>
 {% endblock %}

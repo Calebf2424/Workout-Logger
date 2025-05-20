@@ -147,6 +147,13 @@
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
   ></script>
 
-  {% block page_scripts %}{% endblock %}
+  {% block page_scripts %}
+    {% if request.cookies.get('clear_guest_id') %}
+      <script>
+        // Clear guest ID from local storage if told to
+        localStorage.removeItem("workout_guest_id");
+      </script>
+    {% endif %}
+  {% endblock %}
 </body>
 </html>
