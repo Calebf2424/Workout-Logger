@@ -101,8 +101,10 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("Logged out succesfully.", "info")
-    return redirect(url_for("landing"))
+    flash("Logged out successfully.", "info")
+    response = make_response(redirect(url_for("landing")))
+    response.set_cookie("clear_guest_id", "1", max_age=5, path="/")
+    return response
 
 @app.route("/restore-session", methods=["POST"])
 def restore_session():
