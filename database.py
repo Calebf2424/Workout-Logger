@@ -201,3 +201,35 @@ def update_routine_set_position(set_id, position):
                 SET position = %s
                 WHERE id = %s
             """, (position, set_id))
+
+def create_user_account(username, password_hash, email, guest_id=None):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            if guest_id:
+                # Upgrade existing guest record
+                cur.execute("""
+                    UPDATE users
+                    SET username = %s,
+                        password_hash = %s,
+                        email = %s,
+                        is_guest = FALSE,
+                        guest_id = NULL
+                    WHERE guest_id = %s
+                    RETURNING id;
+                """, (username, password_hash, email, guest_id))
+            else:
+                # Create a brand new user
+                cur.execute("""
+                    INSERT INTO users (username, password_hash, email, is_guest)
+                    VALUES (%s, %s, %s, FALSE)
+                    RETURNING id;
+                """, (username, password_hash, email))
+
+            result = cur.fetchone()
+            return result["id"] if result else None
+
+def get_user_by_username(username):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM users WHERE username = %s AND is_guest = FALSE", (username,))
+            return cur.fetchone()

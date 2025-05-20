@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify  # type: ignore
+from werkzeug.security import generate_password_hash, check_password_hash                       # type: ignore
 from datetime import date, timedelta, datetime
 import pytz                                                                           # type: ignore
 import uuid
@@ -22,10 +23,10 @@ create_routine_sets_table()
 # --- SESSION HANDLING ---
 @app.before_request
 def require_guest():
-    allowed_routes = {"static", "landing", "create_guest", "restore_session"}
+    allowed_routes = {"static", "landing", "create_guest", "login", "register", "restore_session"}
     if request.endpoint in allowed_routes:
         return
-    if "guest_id" not in session:
+    if "guest_id" not in session and "user_id" not in session:
         return redirect(url_for("landing"))
 
 @app.route("/landing")
@@ -42,6 +43,59 @@ def create_guest():
         return jsonify({"guest_id": guest_id})
 
     return redirect(url_for("index"))
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username").strip()
+        password = request.form.get("password")
+        email    = request.form.get("email").strip()
+
+        if get_user_by_username(username):
+            flash("Username already taken.", "danger")
+            return redirect(url_for("register"))
+
+        password_hash = generate_password_hash(password)
+        guest_id = session.get("guest_id")  # Pull guest ID if it exists
+
+        new_user_id = create_user_account(username, password_hash, email, guest_id)
+
+        if new_user_id:
+            # Clear guest ID and log in as real user
+            session.clear()
+            session["user_id"] = new_user_id
+            session["is_guest"] = False
+            flash("Account created successfully!", "success")
+            return redirect(url_for("index"))
+        else:
+            flash("Something went wrong during registration.", "danger")
+
+    return render_template("register.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        user = get_user_by_username(username)
+        if user and check_password_hash(user["password_hash"], password):
+            session.clear()
+            session["user_id"] = user["id"]
+            session["is_guest"] = False
+            flash("Logged in successfully!", "success")
+            return redirect(url_for("index"))
+        else:
+            flash("Invalid username or password.", "danger")
+            return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Logged out succesfully.", "info")
+    return redirect(url_for("landing"))
 
 @app.route("/restore-session", methods=["POST"])
 def restore_session():
