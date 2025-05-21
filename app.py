@@ -131,7 +131,7 @@ def add_workout():
             name = request.form.get("custom_name")
             muscle = request.form.get("custom_muscle")
             exercise = name
-            register_custom_exercise(name, muscle, user_id)
+            register_custom_exercise(name, muscle, presaved_exercises, user_id)
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
