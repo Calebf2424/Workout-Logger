@@ -19,6 +19,7 @@ def create_users_table():
                     password_hash TEXT,
                     email TEXT UNIQUE,
                     is_guest BOOLEAN DEFAULT TRUE,
+                    is_premium BOOLEAN DEFAULT FALSE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)

@@ -44,6 +44,15 @@ def create_guest():
 
     return redirect(url_for("index"))
 
+@app.route("/dev/add-premium-flag")
+def add_premium_flag():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE;
+            """)
+    return "is_premium column added (or already existed)."
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
