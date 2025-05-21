@@ -7,7 +7,7 @@
   <div class="col-12 mb-3">
     {% if chosen_date %}
       <div class="d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('history', date=prev_date) }}"
+        <a href="{{ url_for('day_history', date=prev_date) }}"
            class="btn btn-outline-light btn-sm"
            title="Previous Day">
           <i class="bi bi-chevron-left"></i>
@@ -17,7 +17,7 @@
           <div class="fw-semibold">{{ display_date }}</div>
         </div>
 
-        <a href="{{ url_for('history', date=next_date) }}"
+        <a href="{{ url_for('day_history', date=next_date) }}"
            class="btn btn-outline-light btn-sm"
            title="Next Day">
           <i class="bi bi-chevron-right"></i>
@@ -127,8 +127,8 @@
 
   <!-- Home Button -->
   <div class="col-12 mt-3 mb-3 text-center">
-    <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 py-2">
-      Home
+    <a href="{{ url_for('history') }}" class="btn btn-secondary w-100 py-2">
+      Back
     </a>
   </div>
 </div>

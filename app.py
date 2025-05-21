@@ -158,7 +158,7 @@ def history():
     return render_template("history.html")
 
 @app.route("/history/day", methods=["GET", "POST"])
-def history_day():
+def day_history():
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
@@ -183,7 +183,7 @@ def history_day():
                        muscle_counts={}, settings=app_settings)
 
 @app.route("/history/week", methods=["GET", "POST"])
-def history_week():
+def week_history():
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
@@ -205,10 +205,14 @@ def history_week():
 
     muscle_counts = summarize_muscles(all_sets, user_id)
 
+    full_counts = {muscle: muscle_counts.get(muscle, 0) for muscle in preferred_order}
+
+    sorted_muscles = sorted(full_counts.items(), key=lambda item: (-item[1], item[0].lower()))
+
     display_range = f"{sunday.strftime('%B')} {sunday.day} – {(sunday + timedelta(days=6)).strftime('%B')} {(sunday + timedelta(days=6)).day}"
 
     return render_template("week_history.html", sets=all_sets, chosen_date=sunday.isoformat(),
-                           display_range=display_range, muscle_counts=muscle_counts,
+                           display_range=display_range, muscle_counts=muscle_counts, sorted_muscles=sorted_muscles,
                            settings=app_settings, preferred_order=preferred_order)
 
 @app.route("/summary")

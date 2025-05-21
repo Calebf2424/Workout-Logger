@@ -22,14 +22,12 @@
 
       {% if muscle_counts %}
         <ul class="list-group mb-3">
-          {% for muscle in preferred_order %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span>{{ muscle }}</span>
-              <span class="fw-semibold">
-                {{ muscle_counts[muscle] if muscle in muscle_counts else 0 }} sets
-              </span>
-            </li>
-          {% endfor %}
+        {% for muscle, count in sorted_muscles %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ muscle }}</span>
+            <span class="fw-semibold">{{ count }} sets</span>
+          </li>
+        {% endfor %}
         </ul>
       {% elif chosen_date %}
         <p class="text-muted">No sets logged this week.</p>
@@ -38,8 +36,8 @@
   </div>
 
   <div class="col-12 mt-3 text-center">
-    <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 py-2">
-      Home
+    <a href="{{ url_for('history') }}" class="btn btn-secondary w-100 py-2">
+      Back
     </a>
   </div>
 </div>
