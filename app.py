@@ -120,7 +120,8 @@ def restore_session():
 # --- CORE ROUTES ---
 @app.route("/")
 def index():
-    return render_template("index.html")
+    is_guest = "guest_id" in session and "user_id" not in session
+    return render_template("index.html", is_guest=is_guest)
 
 @app.route("/add-workout", methods=["GET", "POST"])
 def add_workout():

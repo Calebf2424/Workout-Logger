@@ -54,7 +54,9 @@
       </a>
     </div>
   </div>
-  <div class="alert alert-info mt-4 text-center" role="alert">
-    Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
-  </div>
+  {% if is_guest %}
+    <div class="alert alert-info mt-4 text-center" role="alert">
+      Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
+    </div>
+  {% endif %}
 {% endblock %}
