@@ -19,6 +19,7 @@ create_sets_table()
 create_custom_exercise_table()
 create_planned_routines_table()
 create_routine_sets_table()
+create_user_settings_table()
 
 # --- SESSION HANDLING ---
 @app.before_request
@@ -126,6 +127,8 @@ def index():
 @app.route("/add-workout", methods=["GET", "POST"])
 def add_workout():
     user_id = get_current_user_id()
+    settings = get_settings()
+
     if request.method == "POST":
         exercise = request.form.get("exercise")
         if exercise == "__custom__":
@@ -136,10 +139,9 @@ def add_workout():
 
         reps = request.form.get("reps")
         weight = request.form.get("weight")
-        rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
-        tz_name = app_settings.get("timezone", "UTC")
+        rpe = request.form.get("rpe") if settings["rpe_enabled"] else None
 
-        tz = pytz.timezone(tz_name)
+        tz = pytz.timezone(settings.get("timezone", "UTC"))
         local_now = datetime.now(tz)
         log_date = local_now.date().isoformat()
 
@@ -152,7 +154,7 @@ def add_workout():
         set(e["muscle"] for e in all_exercises),
         key=lambda x: preferred_order.index(x) if x in preferred_order else float("inf")
     )
-    return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=app_settings)
+    return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=settings)
 
 @app.route("/history")
 def history():
@@ -160,13 +162,15 @@ def history():
 
 @app.route("/history/day", methods=["GET", "POST"])
 def day_history():
+    settings = get_settings()
+    user_id = get_current_user_id()
+
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
         chosen_date = request.args.get("date")
 
     if chosen_date:
-        user_id = get_current_user_id()
         sets = get_specific_day(chosen_date, user_id)
         muscle_counts = summarize_muscles(sets, user_id)
 
@@ -178,13 +182,16 @@ def day_history():
         return render_template("day_history.html", sets=sets, chosen_date=chosen_date,
                                prev_date=prev_date, next_date=next_date,
                                display_date=display_date,
-                               muscle_counts=muscle_counts, settings=app_settings)
+                               muscle_counts=muscle_counts, settings=settings)
 
     return render_template("day_history.html", sets=None, chosen_date=None,
                        muscle_counts={}, settings=app_settings)
 
 @app.route("/history/week", methods=["GET", "POST"])
 def week_history():
+    settings = get_settings()
+    user_id = get_current_user_id()
+
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
@@ -192,14 +199,13 @@ def week_history():
 
     if not chosen_date:
         return render_template("week_history.html", sets=None, chosen_date=None,
-                               muscle_counts={}, settings=app_settings)
+                               muscle_counts={}, settings=settings)
 
     # Align chosen date to the start of the week (Sunday)
     dt = date.fromisoformat(chosen_date)
     sunday = dt - timedelta(days=dt.weekday() + 1) if dt.weekday() != 6 else dt
     week_dates = [(sunday + timedelta(days=i)).isoformat() for i in range(7)]
 
-    user_id = get_current_user_id()
     all_sets = []
     for d in week_dates:
         all_sets.extend(get_specific_day(d, user_id))
@@ -214,11 +220,13 @@ def week_history():
 
     return render_template("week_history.html", sets=all_sets, chosen_date=sunday.isoformat(),
                            display_range=display_range, muscle_counts=muscle_counts, sorted_muscles=sorted_muscles,
-                           settings=app_settings, preferred_order=preferred_order)
+                           settings=settings, preferred_order=preferred_order)
 
 @app.route("/summary")
 def summary():
+    settings = get_settings()
     user_id = get_current_user_id()
+    
     tzname = app_settings.get("timezone", "America/Edmonton")
     tz = pytz.timezone(tzname)
     local_today = datetime.now(tz).date().isoformat()
@@ -227,17 +235,30 @@ def summary():
     muscle_counts = summarize_muscles(sets, user_id)
 
     return render_template("summary.html", sets=sets, today=local_today,
-                           muscle_counts=muscle_counts, settings=app_settings)
+                           muscle_counts=muscle_counts, settings=settings)
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
+    user_id = get_current_user_id()
+
     if request.method == "POST":
-        app_settings["rpe_enabled"] = request.form.get("rpe_enabled") == "on"
-        app_settings["timezone"] = request.form.get("timezone", "UTC")
-        app_settings["max_weight"] = int(request.form.get("max_weight", 225))
+        rpe_enabled = request.form.get("rpe_enabled") == "on"
+        timezone = request.form.get("timezone", "UTC")
+        max_weight = int(request.form.get("max_weight", 225))
+
+        set_user_settings(user_id, rpe_enabled, timezone, max_weight)
+        flash("Settings saved!", "success")
         return redirect(url_for("index"))
 
-    return render_template("settings.html", settings=app_settings, timezones=pytz.all_timezones)
+    settings = get_user_settings(user_id)
+    if settings is None:
+        settings = {
+            "rpe_enabled": False,
+            "timezone": "UTC",
+            "max_weight": 225
+        }
+
+    return render_template("settings.html", settings=settings, timezones=pytz.all_timezones)
 
 @app.route("/delete-set/<int:set_id>", methods=["POST"])
 def delete_set_route(set_id):
@@ -252,13 +273,18 @@ def delete_set_route(set_id):
 
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
 def edit_set_route(set_id):
+    settings = get_settings()
+
     if request.method == "POST":
         reps = int(request.form["reps"])
         weight = int(request.form["weight"])
-        rpe = float(request.form["rpe"]) if app_settings["rpe_enabled"] and request.form.get("rpe") else None
+        rpe = float(request.form["rpe"]) if settings["rpe_enabled"] and request.form.get("rpe") else None
+
         origin = request.form.get("origin")
         date_param = request.form.get("date")
+
         update_set(set_id, reps, weight, rpe)
+
         if origin == "summary":
             return redirect(url_for("summary") + "#exercises")
         return redirect(url_for("day_history", date=date_param))
@@ -266,8 +292,9 @@ def edit_set_route(set_id):
     origin = request.args.get("origin")
     date_param = request.args.get("date")
     set_data = get_set_by_id(set_id)
+
     return render_template("edit.html", set_data=set_data,
-                           origin=origin, date_param=date_param, settings=app_settings)
+                           origin=origin, date_param=date_param, settings=settings)
 
 # --- PREMADE ROUTINES ---
 @app.route("/premade", methods=["GET", "POST"])
@@ -309,6 +336,7 @@ def start_routine(routine_id):
 
 @app.route("/workout-mode", methods=["GET"])
 def workout_mode():
+    settings = get_settings()
     routine = session.get("active_routine")
     if not routine:
         flash("No active workout")
@@ -337,10 +365,11 @@ def workout_mode():
                        index=index + 1,
                        total=len(sets),
                        next_exercise=next_exercise,
-                       settings=app_settings)
+                       settings=settings)
 
 @app.route("/complete-set", methods=["POST"])
 def complete_set():
+    settings = get_settings()
     routine = session.get("active_routine")
     if not routine:
         flash("No active workout.")
@@ -354,7 +383,7 @@ def complete_set():
     weight   = float(request.form["weight"])
     rpe      = float(request.form["rpe"]) if request.form.get("rpe") else None
 
-    tz = pytz.timezone(app_settings.get("timezone", "UTC"))
+    tz = pytz.timezone(settings.get("timezone", "UTC"))
     local_now = datetime.now(tz)
     log_date = local_now.date().isoformat()
 
@@ -367,6 +396,7 @@ def complete_set():
 
 @app.route("/create-routine", methods=["GET", "POST"])
 def create_routine():
+    settings = get_settings()
     user_id = get_current_user_id()
     all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
 
@@ -455,7 +485,7 @@ def create_routine():
         muscle_groups=muscle_groups,
         current_routine=current,
         current_sets=current_sets,
-        settings=app_settings
+        settings=settings
     )
 
 @app.route("/reorder-routine-sets", methods=["POST"])
@@ -472,6 +502,7 @@ def reorder_routine_sets():
 
 @app.route("/preview-routine/<int:routine_id>")
 def preview_routine(routine_id):
+    settings = get_settings()
     user_id = get_current_user_id()
     routine_sets = get_sets_for_routine(routine_id)
 
@@ -492,7 +523,7 @@ def preview_routine(routine_id):
         "preview_routine.html",
         routine_name=routine_name,
         routine_sets=routine_sets,
-        settings=app_settings,     
+        settings=settings,     
         routine_id=routine_id,
         muscle_counts=muscle_counts
     )
@@ -546,3 +577,11 @@ def get_local_date():
 
 def get_current_user_id():
     return session.get("user_id") or get_user_id_by_guest(session.get("guest_id"))
+
+def get_settings():
+    user_id = get_current_user_id()
+    return get_user_settings(user_id) or {
+        "rpe_enabled": False,
+        "timezone": "UTC",
+        "max_weight": 225
+    }

@@ -235,3 +235,34 @@ def get_user_by_username(username):
         with conn.cursor() as cur:
             cur.execute("SELECT * FROM users WHERE username = %s AND is_guest = FALSE", (username,))
             return cur.fetchone()
+
+#settings 
+def create_user_settings_table():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    user_id INTEGER PRIMARY KEY REFERENCES users(id),
+                    rpe_enabled BOOLEAN DEFAULT FALSE,
+                    timezone TEXT DEFAULT 'UTC',
+                    max_weight INTEGER DEFAULT 225
+                );
+            """)
+
+def get_user_settings(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM user_settings WHERE user_id = %s", (user_id,))
+            return cur.fetchone()
+
+def set_user_settings(user_id, rpe_enabled, timezone, max_weight):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO user_settings (user_id, rpe_enabled, timezone, max_weight)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id)
+                DO UPDATE SET rpe_enabled = EXCLUDED.rpe_enabled,
+                              timezone = EXCLUDED.timezone,
+                              max_weight = EXCLUDED.max_weight
+            """, (user_id, rpe_enabled, timezone, max_weight))
