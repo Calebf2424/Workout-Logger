@@ -138,7 +138,7 @@ def add_workout():
         rpe = request.form.get("rpe") if app_settings["rpe_enabled"] else None
         tz_name = app_settings.get("timezone", "UTC")
 
-        tz = pytz.timezone(app_settings.get("timezone", "UTC"))
+        tz = pytz.timezone(tz_name)
         local_now = datetime.now(tz)
         log_date = local_now.date().isoformat()
 
@@ -153,8 +153,12 @@ def add_workout():
     )
     return render_template("add.html", exercises=all_exercises, muscle_groups=muscle_groups, settings=app_settings)
 
-@app.route("/history", methods=["GET", "POST"])
+@app.route("/history")
 def history():
+    return render_template("history.html")
+
+@app.route("/history/day", methods=["GET", "POST"])
+def history_day():
     if request.method == "POST":
         chosen_date = request.form.get("date")
     else:
@@ -170,14 +174,42 @@ def history():
         next_date = (dt + timedelta(days=1)).isoformat()
         display_date = f"{dt.strftime('%B')} {dt.day}, {dt.year}"
 
-        return render_template("history.html", sets=sets, chosen_date=chosen_date,
+        return render_template("day_history.html", sets=sets, chosen_date=chosen_date,
                                prev_date=prev_date, next_date=next_date,
                                display_date=display_date,
                                muscle_counts=muscle_counts, settings=app_settings)
 
-    return render_template("history.html", sets=None, chosen_date=None,
+    return render_template("day_history.html", sets=None, chosen_date=None,
                        muscle_counts={}, settings=app_settings)
 
+@app.route("/history/week", methods=["GET", "POST"])
+def history_week():
+    if request.method == "POST":
+        chosen_date = request.form.get("date")
+    else:
+        chosen_date = request.args.get("date")
+
+    if not chosen_date:
+        return render_template("week_history.html", sets=None, chosen_date=None,
+                               muscle_counts={}, settings=app_settings)
+
+    # Align chosen date to the start of the week (Sunday)
+    dt = date.fromisoformat(chosen_date)
+    sunday = dt - timedelta(days=dt.weekday() + 1) if dt.weekday() != 6 else dt
+    week_dates = [(sunday + timedelta(days=i)).isoformat() for i in range(7)]
+
+    user_id = get_current_user_id()
+    all_sets = []
+    for d in week_dates:
+        all_sets.extend(get_specific_day(d, user_id))
+
+    muscle_counts = summarize_muscles(all_sets, user_id)
+
+    display_range = f"{sunday.strftime('%B')} {sunday.day} – {(sunday + timedelta(days=6)).strftime('%B')} {(sunday + timedelta(days=6)).day}"
+
+    return render_template("week_history.html", sets=all_sets, chosen_date=sunday.isoformat(),
+                           display_range=display_range, muscle_counts=muscle_counts,
+                           settings=app_settings, preferred_order=preferred_order)
 
 @app.route("/summary")
 def summary():
@@ -210,7 +242,7 @@ def delete_set_route(set_id):
     if origin == "summary":
         return redirect(url_for("summary") + "#exercises")
     elif origin == "history" and date_param:
-        return redirect(url_for("history", date=date_param))
+        return redirect(url_for("day_history", date=date_param))
     return redirect(url_for("index"))
 
 @app.route("/edit-set/<int:set_id>", methods=["GET", "POST"])
@@ -224,7 +256,7 @@ def edit_set_route(set_id):
         update_set(set_id, reps, weight, rpe)
         if origin == "summary":
             return redirect(url_for("summary") + "#exercises")
-        return redirect(url_for("history", date=date_param))
+        return redirect(url_for("day_history", date=date_param))
 
     origin = request.args.get("origin")
     date_param = request.args.get("date")

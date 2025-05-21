@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Weekly Summary – Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <div class="col-12">
+    <div class="card home-card p-4 text-center">
+      <h2 class="fw-bold mb-3">Weekly Summary</h2>
+
+      {% if chosen_date %}
+        <div class="mb-3">
+          <div class="fw-semibold">{{ display_range }}</div>
+        </div>
+      {% else %}
+        <div class="mb-3">
+          <form method="POST" class="d-flex justify-content-center">
+            <input type="date" name="date" class="form-control form-control-lg w-auto me-2" required>
+            <button type="submit" class="btn btn-primary btn-lg">View</button>
+          </form>
+        </div>
+      {% endif %}
+
+      {% if muscle_counts %}
+        <ul class="list-group mb-3">
+          {% for muscle in preferred_order %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ muscle }}</span>
+              <span class="fw-semibold">
+                {{ muscle_counts[muscle] if muscle in muscle_counts else 0 }} sets
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% elif chosen_date %}
+        <p class="text-muted">No sets logged this week.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 mt-3 text-center">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 py-2">
+      Home
+    </a>
+  </div>
+</div>
+{% endblock %}

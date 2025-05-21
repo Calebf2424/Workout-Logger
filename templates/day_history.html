@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Workout History – Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <!-- Date Picker / Navigation -->
+  <div class="col-12 mb-3">
+    {% if chosen_date %}
+      <div class="d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('history', date=prev_date) }}"
+           class="btn btn-outline-light btn-sm"
+           title="Previous Day">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+
+        <div class="card home-card px-4 py-1 text-center">
+          <div class="fw-semibold">{{ display_date }}</div>
+        </div>
+
+        <a href="{{ url_for('history', date=next_date) }}"
+           class="btn btn-outline-light btn-sm"
+           title="Next Day">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </div>
+    {% else %}
+      <div class="card home-card px-4 py-3 text-center">
+        <h5 class="fw-semibold mb-0">Select Date</h5>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if chosen_date and sets %}
+    <!-- Summary View -->
+    <div class="col-12">
+      <div class="card home-card p-4">
+        <h2 class="fw-bold mb-3">Workout Summary</h2>
+
+        <!-- Tabs -->
+        <div class="d-flex mb-4">
+          <button id="tab-summary" class="btn btn-outline-primary flex-fill me-2"
+                  onclick="showTab('summary')">
+            Summary
+          </button>
+          <button id="tab-exercises" class="btn btn-outline-primary flex-fill"
+                  onclick="showTab('exercises')">
+            Exercises
+          </button>
+        </div>
+
+        <!-- SUMMARY TAB -->
+        <div id="summaryTab">
+          {% set total_sets = muscle_counts.values() | sum %}
+          {% set rpe_list = sets | map(attribute=4) | select | list %}
+
+          <div class="d-flex justify-content-between mb-3">
+            <div class="text-center flex-fill">
+              <small class="text-muted">Total Sets</small>
+              <div class="fs-5 fw-semibold">{{ total_sets }}</div>
+            </div>
+            {% if settings.rpe_enabled and rpe_list %}
+            <div class="text-center flex-fill">
+              <small class="text-muted">Avg RPE</small>
+              <div class="fs-5 fw-semibold">
+                {{ (rpe_list | sum / rpe_list | length) | round(1) }}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <canvas id="muscleChart" height="200"></canvas>
+        </div>
+
+        <!-- EXERCISES TAB -->
+        <div id="exercisesTab" style="display:none;">
+          <ul class="list-group mb-3">
+            {% for s in sets %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">{{ s["exercise"] }}</div>
+                <small class="text-muted">
+                  {{ s["reps"] }} reps • {{ s["weight"] }} lbs
+                  {% if settings.rpe_enabled and s["rpe"] is not none %}
+                    • RPE {{ s["rpe"] }}
+                  {% endif %}
+                </small>
+              </div>
+              <div class="btn-group btn-group-sm gap-2">
+                <a href="{{ url_for('edit_set_route', set_id=s['id'], origin='history', date=chosen_date) }}"
+                   class="btn btn-outline-secondary btn-sm rounded px-2 py-1">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form action="{{ url_for('delete_set_route', set_id=s['id']) }}"
+                      method="POST"
+                      onsubmit="return confirm('Are you sure you want to delete this set?');">
+                  <input type="hidden" name="origin" value="history">
+                  <input type="hidden" name="date" value="{{ chosen_date }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm rounded px-2 py-1">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  {% elif not chosen_date %}
+    <!-- Form to pick a date -->
+    <div class="col-12">
+      <div class="card home-card p-4 text-center">
+        <form method="POST" class="d-flex justify-content-center align-items-center">
+          <input type="date" name="date" class="form-control form-control-lg w-auto me-3" required>
+          <button type="submit" class="btn btn-primary btn-lg px-4">View</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <!-- No sets found -->
+    <div class="col-12">
+      <div class="card home-card p-4 text-center">
+        <p class="text-muted mb-0">No sets logged on this date.</p>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Home Button -->
+  <div class="col-12 mt-3 mb-3 text-center">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 py-2">
+      Home
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <script>
+    function showTab(tab) {
+      document.getElementById('summaryTab').style.display = tab === 'summary' ? 'block' : 'none';
+      document.getElementById('exercisesTab').style.display = tab === 'exercises' ? 'block' : 'none';
+      document.getElementById('tab-summary').classList.toggle('active', tab === 'summary');
+      document.getElementById('tab-exercises').classList.toggle('active', tab === 'exercises');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash === '#exercises' ? 'exercises' : 'summary';
+      showTab(hash);
+
+      const labels = {{ muscle_counts.keys() | list | tojson }};
+      const data = {{ muscle_counts.values() | list | tojson }};
+      const ctx = document.getElementById('muscleChart').getContext('2d');
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: 'rgba(13,110,253,0.7)',
+            borderRadius: 4,
+            barPercentage: 0.6
+          }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    });
+  </script>
+{% endblock %}

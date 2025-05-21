@@ -91,7 +91,7 @@
       <div class="text-center mt-3">
         <a
           href="{% if origin == 'history' %}
-                   {{ url_for('history', date=date_param) }}
+                   {{ url_for('day_history', date=date_param) }}
                  {% else %}
                    {{ url_for('summary') }}#exercises
                  {% endif %}"
