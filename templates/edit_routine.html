@@ -8,7 +8,7 @@
       <h2 class="fw-bold mb-3 text-center">Edit Routine</h2>
 
       {% if routine_sets %}
-        <!-- Save Order + List -->
+        <!-- Reorder Form -->
         <form method="POST" action="{{ url_for('reorder_routine_sets') }}" id="order-form">
           <input type="hidden" name="order" id="order-input">
           <input type="hidden" name="routine_id" value="{{ routine_id }}">
@@ -27,16 +27,11 @@
                           onclick="enableSetEdit({{ s.id }})">
                     <i class="bi bi-pencil"></i>
                   </button>
-
-                  <!-- Delete Button -->
-                  <form method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}"
-                        onsubmit="return confirm('Delete {{ s.exercise }} from this routine?');">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="set_id" value="{{ s.id }}">
-                    <button type="submit" class="btn btn-outline-danger px-2 py-1">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </form>
+                  <!-- Delete Button triggers hidden form -->
+                  <button type="button" class="btn btn-outline-danger px-2 py-1"
+                          onclick="confirmDelete({{ s.id }}, '{{ s.exercise }}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
               </li>
 
@@ -55,59 +50,66 @@
               </li>
             {% endfor %}
           </ul>
-        {% endif %}
+        </form>
 
-        <!-- Add Exercise Form -->
-        <form id="add-form" method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" style="display:none;">
-          <input type="hidden" name="action" value="add">
+        <!-- Hidden Delete Forms (one per set) -->
+        {% for s in routine_sets %}
+          <form id="delete-form-{{ s.id }}" method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" style="display: none;">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="set_id" value="{{ s.id }}">
+          </form>
+        {% endfor %}
+      {% endif %}
 
-          <!-- Exercise selector -->
-          <div class="mb-4">
-            <label for="exercise" class="form-label fw-semibold">Exercise</label>
-            <select id="exercise" name="exercise" data-choices class="form-select" onchange="toggleCustomExercise(this.value)" required>
-              <option value="">Select exercise</option>
-              <option value="__custom__">Custom Exercise</option>
-              {% for e in exercises %}
-                <option value="{{ e.name }}">{{ e.name }}</option>
+      <!-- Add Exercise Form -->
+      <form id="add-form" method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" style="display:none;">
+        <input type="hidden" name="action" value="add">
+
+        <!-- Exercise selector -->
+        <div class="mb-4">
+          <label for="exercise" class="form-label fw-semibold">Exercise</label>
+          <select id="exercise" name="exercise" data-choices class="form-select" onchange="toggleCustomExercise(this.value)" required>
+            <option value="">Select exercise</option>
+            <option value="__custom__">Custom Exercise</option>
+            {% for e in exercises %}
+              <option value="{{ e.name }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Custom Exercise fields -->
+        <div id="custom-fields" class="mb-4" style="display: none;">
+          <div class="mb-3">
+            <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+            <input type="text" id="custom_name" name="custom_name" class="form-control">
+          </div>
+          <div>
+            <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+            <select id="custom_muscle" name="custom_muscle" class="form-select">
+              <option value="">Choose muscle group</option>
+              {% for m in muscle_groups %}
+                <option value="{{ m }}">{{ m }}</option>
               {% endfor %}
             </select>
           </div>
+        </div>
 
-          <!-- Custom Exercise fields -->
-          <div id="custom-fields" class="mb-4" style="display: none;">
-            <div class="mb-3">
-              <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
-              <input type="text" id="custom_name" name="custom_name" class="form-control">
-            </div>
-            <div>
-              <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
-              <select id="custom_muscle" name="custom_muscle" class="form-select">
-                <option value="">Choose muscle group</option>
-                {% for m in muscle_groups %}
-                  <option value="{{ m }}">{{ m }}</option>
-                {% endfor %}
-              </select>
-            </div>
+        <!-- Sets input -->
+        <div class="mb-4">
+          <label for="sets" class="form-label fw-semibold">Number of Sets</label>
+          <div class="input-group">
+            <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
+            <input type="number" id="sets" name="sets" class="form-control text-center" value="3" min="1" max="20" step="1" oninput="clamp('sets')">
+            <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
           </div>
+        </div>
 
-          <!-- Sets input -->
-          <div class="mb-4">
-            <label for="sets" class="form-label fw-semibold">Number of Sets</label>
-            <div class="input-group">
-              <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
-              <input type="number" id="sets" name="sets" class="form-control text-center" value="3" min="1" max="20" step="1" oninput="clamp('sets')">
-              <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
-            </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 py-2 mb-3">✅ Confirm Add</button>
-        </form>
-
-        <!-- Add + Save Buttons -->
-        <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">➕ Add Exercise</button>
-        <button type="submit" form="order-form" class="btn btn-success w-100 mb-2">💾 Save Routine</button>
+        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">✅ Confirm Add</button>
       </form>
 
+      <!-- Buttons -->
+      <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">➕ Add Exercise</button>
+      <button type="submit" form="order-form" class="btn btn-success w-100 mb-2">💾 Save Routine</button>
       <a href="{{ url_for('premade') }}" class="btn btn-secondary w-100">Back</a>
     </div>
   </div>
@@ -161,6 +163,12 @@
 
   function cancelEdit(setId) {
     document.getElementById(`edit-row-${setId}`).style.display = 'none';
+  }
+
+  function confirmDelete(id, name) {
+    if (confirm(`Are you sure you want to delete "${name}" from this routine?`)) {
+      document.getElementById(`delete-form-${id}`).submit();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {

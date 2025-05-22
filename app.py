@@ -632,6 +632,11 @@ def dev_usernames():
             names = [row["username"] for row in cur.fetchall()]
     return jsonify({"usernames": names})
 
+#programming routes
+@app.route("/split", methods=["GET", "POST"])
+def workout_split():
+    return render_template("index.html")
+
 #funcs
 def get_local_date():
     user_tz = session.get("timezone", "UTC")
