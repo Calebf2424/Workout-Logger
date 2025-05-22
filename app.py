@@ -492,16 +492,18 @@ def create_routine():
 def reorder_routine_sets():
     order = request.form.get("order", "")
     routine_id = request.form.get("routine_id")
+    redirect_target = request.form.get("next", "create_routine")  # default fallback
     ids = [int(x) for x in order.split(",") if x.strip().isdigit()]
 
-    # Set new position field in DB (you’d add a `position` column to `routine_sets`)
     for index, set_id in enumerate(ids):
         update_routine_set_position(set_id, index)
-    
-    if routine_id:
-        return redirect(url_for("edit_routine", routine_id=routine_id))
 
     flash("Routine order updated!", "success")
+
+    if redirect_target == "premade":
+        return redirect(url_for("premade"))
+    elif routine_id:
+        return redirect(url_for("edit_routine", routine_id=routine_id))
     return redirect(url_for("create_routine"))
 
 @app.route("/edit-routine/<int:routine_id>", methods=["GET", "POST"])

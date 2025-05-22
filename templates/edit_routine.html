@@ -9,8 +9,10 @@
 
       {% if routine_sets %}
         <form method="POST" action="{{ url_for('reorder_routine_sets') }}">
-          <input type="hidden" name="order" id="order-input">
-          <input type="hidden" name="routine_id" value="{{ routine_id }}">
+        <input type="hidden" name="order" id="order-input">
+        <input type="hidden" name="routine_id" value="{{ routine_id }}">
+        <input type="hidden" name="next" value="premade">
+
 
           <ul class="list-group mb-3" id="routine-list">
             {% for s in routine_sets %}
@@ -21,7 +23,7 @@
             {% endfor %}
           </ul>
 
-          <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
+          <button type="submit" class="btn btn-success w-100 mb-2"> Save Order</button>
         </form>
       {% else %}
         <p class="text-muted text-center">This routine has no sets yet.</p>
