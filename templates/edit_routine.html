@@ -7,23 +7,74 @@
     <div class="card home-card p-4">
       <h2 class="fw-bold mb-3 text-center">Edit Routine</h2>
 
-      {% if routine_sets %}
-        <form method="POST" action="{{ url_for('reorder_routine_sets') }}">
-        <input type="hidden" name="order" id="order-input">
-        <input type="hidden" name="routine_id" value="{{ routine_id }}">
-        <input type="hidden" name="next" value="premade">
+      <!-- Add Exercise Form -->
+      <form method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}">
+        <input type="hidden" name="action" value="add">
 
+        <!-- Exercise selector -->
+        <div class="mb-4">
+          <label for="exercise" class="form-label fw-semibold">Exercise</label>
+          <select id="exercise" name="exercise" data-choices
+                  class="form-select"
+                  onchange="toggleCustomExercise(this.value)"
+                  required>
+            <option value="">Select exercise</option>
+            <option value="__custom__">Custom Exercise</option>
+            {% for e in exercises %}
+              <option value="{{ e.name }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Custom Exercise fields -->
+        <div id="custom-fields" class="mb-4" style="display: none;">
+          <div class="mb-3">
+            <label for="custom_name" class="form-label fw-semibold">Custom Name</label>
+            <input type="text" id="custom_name" name="custom_name" class="form-control">
+          </div>
+          <div>
+            <label for="custom_muscle" class="form-label fw-semibold">Muscle Group</label>
+            <select id="custom_muscle" name="custom_muscle" class="form-select">
+              <option value="">Choose muscle group</option>
+              {% for m in muscle_groups %}
+                <option value="{{ m }}">{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Sets input -->
+        <div class="mb-4">
+          <label for="sets" class="form-label fw-semibold">Number of Sets</label>
+          <div class="input-group" style="max-width: 350px; margin: 0 auto;">
+            <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
+            <input type="number" id="sets" name="sets" class="form-control text-center"
+                   value="3" min="1" max="20" step="1" oninput="clamp('sets')">
+            <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">
+          ➕ Add to Routine
+        </button>
+      </form>
+
+      <!-- Reorder Form -->
+      {% if routine_sets %}
+        <form method="POST" action="{{ url_for('reorder_routine_sets') }}" class="mt-4">
+          <input type="hidden" name="order" id="order-input">
+          <input type="hidden" name="routine_id" value="{{ routine_id }}">
+          <input type="hidden" name="next" value="premade">
 
           <ul class="list-group mb-3" id="routine-list">
             {% for s in routine_sets %}
               <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ s.id }}">
                 <span>{{ s.exercise }} – {{ s.sets }} set{{ 's' if s.sets > 1 else '' }}</span>
-                <!-- Optional: Add delete buttons here if you want later -->
               </li>
             {% endfor %}
           </ul>
 
-          <button type="submit" class="btn btn-success w-100 mb-2"> Save Order</button>
+          <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
         </form>
       {% else %}
         <p class="text-muted text-center">This routine has no sets yet.</p>
@@ -52,5 +103,35 @@
         });
       }
     });
+
+    function toggleCustomExercise(value) {
+      const cf = document.getElementById('custom-fields');
+      if (value === '__custom__') {
+        cf.style.display = 'block';
+        document.getElementById('custom_name').required = true;
+        document.getElementById('custom_muscle').required = true;
+      } else {
+        cf.style.display = 'none';
+        document.getElementById('custom_name').required = false;
+        document.getElementById('custom_muscle').required = false;
+      }
+    }
+
+    function change(field, delta) {
+      const el = document.getElementById(field);
+      let val = parseInt(el.value) || 0;
+      val = Math.min(el.max, Math.max(el.min, val + delta));
+      el.value = val;
+    }
+
+    function clamp(field) {
+      const el = document.getElementById(field);
+      const raw = el.value.trim();
+      if (raw === '') return;
+      let val = parseInt(raw);
+      if (isNaN(val) || val < el.min) val = el.min;
+      if (val > el.max)               val = el.max;
+      el.value = val;
+    }
   </script>
 {% endblock %}

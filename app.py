@@ -509,17 +509,43 @@ def reorder_routine_sets():
 @app.route("/edit-routine/<int:routine_id>", methods=["GET", "POST"])
 def edit_routine(routine_id):
     user_id = get_current_user_id()
-    routine_sets = get_sets_for_routine(routine_id)
     settings = get_settings()
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
 
     if request.method == "POST":
-        # Handle reordering, removal, or updating of exercises
-        # You could allow updating set counts here too
-        flash("Routine updated!")
-        return redirect(url_for("premade"))
+        action = request.form.get("action")
+        if action == "add":
+            exercise = request.form.get("exercise")
+            if not exercise:
+                flash("Please select an exercise.", "danger")
+                return redirect(url_for("edit_routine", routine_id=routine_id))
+
+            if exercise == "__custom__":
+                custom_name = request.form.get("custom_name", "").strip()
+                custom_muscle = request.form.get("custom_muscle", "").strip()
+
+                if not custom_name or not custom_muscle:
+                    flash("Fill in both custom name and muscle group.", "danger")
+                    return redirect(url_for("edit_routine", routine_id=routine_id))
+
+                register_custom_exercise(custom_name, custom_muscle, presaved_exercises, user_id)
+                exercise = custom_name
+
+            sets_count = int(request.form.get("sets", 1))
+            insert_routine_set(routine_id, exercise, sets_count, user_id)
+            flash(f"Added {sets_count}× {exercise} to routine.", "success")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+
+    current_sets = get_sets_for_routine(routine_id)
+    muscle_groups = sorted(
+        set(e["muscle"] for e in all_exercises),
+        key=lambda m: preferred_order.index(m) if m in preferred_order else float("inf")
+    )
 
     return render_template("edit_routine.html",
-                           routine_sets=routine_sets,
+                           routine_sets=current_sets,
+                           exercises=all_exercises,
+                           muscle_groups=muscle_groups,
                            routine_id=routine_id,
                            settings=settings)
 
