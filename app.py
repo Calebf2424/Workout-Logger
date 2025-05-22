@@ -491,14 +491,35 @@ def create_routine():
 @app.route("/reorder-routine-sets", methods=["POST"])
 def reorder_routine_sets():
     order = request.form.get("order", "")
+    routine_id = request.form.get("routine_id")
     ids = [int(x) for x in order.split(",") if x.strip().isdigit()]
 
     # Set new position field in DB (you’d add a `position` column to `routine_sets`)
     for index, set_id in enumerate(ids):
         update_routine_set_position(set_id, index)
+    
+    if routine_id:
+        return redirect(url_for("edit_routine", routine_id=routine_id))
 
     flash("Routine order updated!", "success")
     return redirect(url_for("create_routine"))
+
+@app.route("/edit-routine/<int:routine_id>", methods=["GET", "POST"])
+def edit_routine(routine_id):
+    user_id = get_current_user_id()
+    routine_sets = get_sets_for_routine(routine_id)
+    settings = get_settings()
+
+    if request.method == "POST":
+        # Handle reordering, removal, or updating of exercises
+        # You could allow updating set counts here too
+        flash("Routine updated!")
+        return redirect(url_for("premade"))
+
+    return render_template("edit_routine.html",
+                           routine_sets=routine_sets,
+                           routine_id=routine_id,
+                           settings=settings)
 
 @app.route("/preview-routine/<int:routine_id>")
 def preview_routine(routine_id):
@@ -549,6 +570,7 @@ def skip_set():
     
     return redirect(url_for("workout_mode"))
 
+#dev routes
 @app.route("/dev")
 def dev_page():
     return render_template("dev.html")

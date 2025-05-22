@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Edit Routine – Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center w-100" style="max-width: 400px;">
+  <div class="col-12">
+    <div class="card home-card p-4">
+      <h2 class="fw-bold mb-3 text-center">Edit Routine</h2>
+
+      {% if routine_sets %}
+        <form method="POST" action="{{ url_for('reorder_routine_sets') }}">
+          <input type="hidden" name="order" id="order-input">
+          <input type="hidden" name="routine_id" value="{{ routine_id }}">
+
+          <ul class="list-group mb-3" id="routine-list">
+            {% for s in routine_sets %}
+              <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ s.id }}">
+                <span>{{ s.exercise }} – {{ s.sets }} set{{ 's' if s.sets > 1 else '' }}</span>
+                <!-- Optional: Add delete buttons here if you want later -->
+              </li>
+            {% endfor %}
+          </ul>
+
+          <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
+        </form>
+      {% else %}
+        <p class="text-muted text-center">This routine has no sets yet.</p>
+      {% endif %}
+
+      <a href="{{ url_for('premade') }}" class="btn btn-secondary w-100">Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const list = document.getElementById('routine-list');
+      const orderInput = document.getElementById('order-input');
+
+      if (list && orderInput) {
+        Sortable.create(list, {
+          animation: 150,
+          onEnd: () => {
+            const ids = [...list.children].map(li => li.dataset.id);
+            orderInput.value = ids.join(',');
+          }
+        });
+      }
+    });
+  </script>
+{% endblock %}

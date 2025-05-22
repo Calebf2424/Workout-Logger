@@ -33,15 +33,13 @@
                   <i class="bi bi-eye-fill"></i>
                 </button>
               
-                <!-- Edit is buggy will fix in future update
-                <button type="submit"
-                        name="action"
-                        value="edit_{{ r.id }}"
-                        class="btn btn-sm btn-link text-dark me-2 p-0"
-                        aria-label="Edit">
+                <!-- Edit -->
+                <a href="{{ url_for('edit_routine', routine_id=r.id) }}"
+                  class="btn btn-sm btn-link text-dark me-2 p-0"
+                  aria-label="Edit">
                   <i class="bi bi-pencil-fill"></i>
-                </button>
-                --->
+                </a>
+                
                 <!-- Delete -->
                 <button type="submit"
                         name="action"
