@@ -109,8 +109,7 @@
 
       <!-- Buttons -->
       <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">➕ Add Exercise</button>
-      <button type="submit" form="order-form" class="btn btn-success w-100 mb-2">💾 Save Routine</button>
-      <a href="{{ url_for('premade') }}" class="btn btn-secondary w-100">Back</a>
+      <button class="btn btn-success w-100 mb-2" onclick="checkBeforeSubmit(event)">💾 Save Routine</button>
     </div>
   </div>
 </div>
@@ -185,4 +184,18 @@
     }
   });
 </script>
+<script>
+  function checkBeforeSubmit(event) {
+    const list = document.getElementById('routine-list');
+    if (!list || list.children.length === 0) {
+      event.preventDefault();
+      alert("Routine cannot be empty.");
+      return false;
+    }
+
+    // Submit the reorder form
+    document.getElementById('order-form').submit();
+  }
+</script>
+
 {% endblock %}
