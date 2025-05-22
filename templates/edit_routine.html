@@ -7,11 +7,6 @@
     <div class="card home-card p-4">
       <h2 class="fw-bold mb-3 text-center">Edit Routine</h2>
 
-      <!-- Add Exercise Button -->
-      <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">
-        ➕ Add Exercise
-      </button>
-
       <!-- Add Exercise Form (initially hidden) -->
       <form id="add-form" method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" style="display:none;">
         <input type="hidden" name="action" value="add">
@@ -102,7 +97,8 @@
             </li>
           {% endfor %}
         </ul>
-
+    <!-- Add Exercise Button -->
+      <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">➕ Add Exercise</button>
         <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
       </form>
 
