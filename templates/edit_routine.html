@@ -7,17 +7,18 @@
     <div class="card home-card p-4">
       <h2 class="fw-bold mb-3 text-center">Edit Routine</h2>
 
-      <!-- Add Exercise Form -->
-      <form method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}">
-        <input type="hidden" name="action" value="add">
+      <!-- Add Exercise Button -->
+      <button class="btn btn-outline-primary w-100 mb-3" onclick="toggleAddForm()">
+        ➕ Add Exercise
+      </button>
 
+      <!-- Add Exercise Form (initially hidden) -->
+      <form id="add-form" method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" style="display:none;">
+        <input type="hidden" name="action" value="add">
         <!-- Exercise selector -->
         <div class="mb-4">
           <label for="exercise" class="form-label fw-semibold">Exercise</label>
-          <select id="exercise" name="exercise" data-choices
-                  class="form-select"
-                  onchange="toggleCustomExercise(this.value)"
-                  required>
+          <select id="exercise" name="exercise" data-choices class="form-select" onchange="toggleCustomExercise(this.value)" required>
             <option value="">Select exercise</option>
             <option value="__custom__">Custom Exercise</option>
             {% for e in exercises %}
@@ -46,39 +47,64 @@
         <!-- Sets input -->
         <div class="mb-4">
           <label for="sets" class="form-label fw-semibold">Number of Sets</label>
-          <div class="input-group" style="max-width: 350px; margin: 0 auto;">
+          <div class="input-group">
             <button type="button" class="btn btn-outline-primary" onclick="change('sets', -1)">−</button>
-            <input type="number" id="sets" name="sets" class="form-control text-center"
-                   value="3" min="1" max="20" step="1" oninput="clamp('sets')">
+            <input type="number" id="sets" name="sets" class="form-control text-center" value="3" min="1" max="20" step="1" oninput="clamp('sets')">
             <button type="button" class="btn btn-outline-primary" onclick="change('sets', 1)">+</button>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 py-2">
-          ➕ Add to Routine
-        </button>
+        <button type="submit" class="btn btn-primary w-100 py-2">✅ Confirm Add</button>
       </form>
 
-      <!-- Reorder Form -->
-      {% if routine_sets %}
-        <form method="POST" action="{{ url_for('reorder_routine_sets') }}" class="mt-4">
-          <input type="hidden" name="order" id="order-input">
-          <input type="hidden" name="routine_id" value="{{ routine_id }}">
-          <input type="hidden" name="next" value="premade">
+      <!-- Routine List with Edit/Delete -->
+      <form method="POST" action="{{ url_for('reorder_routine_sets') }}" class="mt-4">
+        <input type="hidden" name="order" id="order-input">
+        <input type="hidden" name="routine_id" value="{{ routine_id }}">
+        <input type="hidden" name="next" value="premade">
 
-          <ul class="list-group mb-3" id="routine-list">
-            {% for s in routine_sets %}
-              <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ s.id }}">
-                <span>{{ s.exercise }} – {{ s.sets }} set{{ 's' if s.sets > 1 else '' }}</span>
-              </li>
-            {% endfor %}
-          </ul>
+        <ul class="list-group mb-3" id="routine-list">
+          {% for s in routine_sets %}
+            <li class="list-group-item d-flex justify-content-between align-items-center" data-id="{{ s.id }}">
+              <span>
+                <strong>{{ s.exercise }}</strong>
+                – 
+                <span id="sets-label-{{ s.id }}">{{ s.sets }} set{{ 's' if s.sets > 1 else '' }}</span>
+              </span>
+              <span class="btn-group btn-group-sm">
+                <!-- Edit Button -->
+                <button type="button" class="btn btn-outline-secondary px-2 py-1"
+                        onclick="enableSetEdit({{ s.id }}, {{ s.sets }})">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <!-- Delete Button -->
+                <form method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}" onsubmit="return confirm('Delete {{ s.exercise }} from this routine?');">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="set_id" value="{{ s.id }}">
+                  <button type="submit" class="btn btn-outline-danger px-2 py-1">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </span>
+            </li>
+            <!-- Inline Edit Form -->
+            <li class="list-group-item" id="edit-row-{{ s.id }}" style="display:none;">
+              <form method="POST" action="{{ url_for('edit_routine', routine_id=routine_id) }}">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="set_id" value="{{ s.id }}">
+                <div class="d-flex align-items-center gap-3">
+                  <label class="fw-semibold mb-0">Sets:</label>
+                  <input type="number" name="new_sets" class="form-control" value="{{ s.sets }}" min="1" max="20" style="max-width: 80px;">
+                  <button type="submit" class="btn btn-success btn-sm">Save</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="cancelEdit({{ s.id }})">Cancel</button>
+                </div>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
 
-          <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
-        </form>
-      {% else %}
-        <p class="text-muted text-center">This routine has no sets yet.</p>
-      {% endif %}
+        <button type="submit" class="btn btn-success w-100 mb-2">💾 Save Order</button>
+      </form>
 
       <a href="{{ url_for('premade') }}" class="btn btn-secondary w-100">Back</a>
     </div>
@@ -89,31 +115,24 @@
 {% block page_scripts %}
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const list = document.getElementById('routine-list');
-      const orderInput = document.getElementById('order-input');
-
-      if (list && orderInput) {
-        Sortable.create(list, {
-          animation: 150,
-          onEnd: () => {
-            const ids = [...list.children].map(li => li.dataset.id);
-            orderInput.value = ids.join(',');
-          }
-        });
-      }
-    });
+    function toggleAddForm() {
+      const form = document.getElementById('add-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
 
     function toggleCustomExercise(value) {
-      const cf = document.getElementById('custom-fields');
-      if (value === '__custom__') {
-        cf.style.display = 'block';
-        document.getElementById('custom_name').required = true;
-        document.getElementById('custom_muscle').required = true;
+      const customFields = document.getElementById("custom-fields");
+      const name = document.getElementById("custom_name");
+      const muscle = document.getElementById("custom_muscle");
+
+      if (value === "__custom__") {
+        customFields.style.display = "block";
+        name.required = true;
+        muscle.required = true;
       } else {
-        cf.style.display = 'none';
-        document.getElementById('custom_name').required = false;
-        document.getElementById('custom_muscle').required = false;
+        customFields.style.display = "none";
+        name.required = false;
+        muscle.required = false;
       }
     }
 
@@ -133,5 +152,28 @@
       if (val > el.max)               val = el.max;
       el.value = val;
     }
+
+    function enableSetEdit(setId, currentSets) {
+      document.getElementById(`edit-row-${setId}`).style.display = 'block';
+    }
+
+    function cancelEdit(setId) {
+      document.getElementById(`edit-row-${setId}`).style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const list = document.getElementById('routine-list');
+      const orderInput = document.getElementById('order-input');
+
+      if (list && orderInput) {
+        Sortable.create(list, {
+          animation: 150,
+          onEnd: () => {
+            const ids = [...list.children].map(li => li.dataset.id).filter(Boolean);
+            orderInput.value = ids.join(',');
+          }
+        });
+      }
+    });
   </script>
 {% endblock %}

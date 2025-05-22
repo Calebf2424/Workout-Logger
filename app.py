@@ -511,43 +511,56 @@ def edit_routine(routine_id):
     user_id = get_current_user_id()
     settings = get_settings()
     all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
+    muscle_groups = sorted(
+        set(e["muscle"] for e in all_exercises),
+        key=lambda m: preferred_order.index(m) if m in preferred_order else float('inf')
+    )
 
     if request.method == "POST":
         action = request.form.get("action")
+
+        # ADD new exercise to routine
         if action == "add":
             exercise = request.form.get("exercise")
-            if not exercise:
-                flash("Please select an exercise.", "danger")
-                return redirect(url_for("edit_routine", routine_id=routine_id))
-
             if exercise == "__custom__":
-                custom_name = request.form.get("custom_name", "").strip()
-                custom_muscle = request.form.get("custom_muscle", "").strip()
-
-                if not custom_name or not custom_muscle:
-                    flash("Fill in both custom name and muscle group.", "danger")
+                name = request.form.get("custom_name", "").strip()
+                muscle = request.form.get("custom_muscle", "").strip()
+                if not name or not muscle:
+                    flash("Custom exercise name and muscle are required.", "danger")
                     return redirect(url_for("edit_routine", routine_id=routine_id))
 
-                register_custom_exercise(custom_name, custom_muscle, presaved_exercises, user_id)
-                exercise = custom_name
+                register_custom_exercise(name, muscle, presaved_exercises, user_id)
+                exercise = name
 
-            sets_count = int(request.form.get("sets", 1))
-            insert_routine_set(routine_id, exercise, sets_count, user_id)
-            flash(f"Added {sets_count}× {exercise} to routine.", "success")
+            sets = int(request.form.get("sets", 1))
+            insert_routine_set(routine_id, exercise, sets, user_id)
+            flash(f"Added {sets}× {exercise}", "success")
             return redirect(url_for("edit_routine", routine_id=routine_id))
 
-    current_sets = get_sets_for_routine(routine_id)
-    muscle_groups = sorted(
-        set(e["muscle"] for e in all_exercises),
-        key=lambda m: preferred_order.index(m) if m in preferred_order else float("inf")
-    )
+        # DELETE an exercise from routine
+        elif action == "delete":
+            set_id = int(request.form.get("set_id"))
+            delete_routine_set(set_id)
+            flash("Exercise removed from routine.", "warning")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
 
+        # UPDATE sets count
+        elif action == "update":
+            set_id = int(request.form.get("set_id"))
+            new_sets = int(request.form.get("new_sets", 1))
+            update_routine_set_count(set_id, new_sets)
+            flash("Set count updated.", "success")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+
+    # GET: show routine sets
+    routine_sets = get_sets_for_routine(routine_id)
     return render_template("edit_routine.html",
-                           routine_sets=current_sets,
-                           exercises=all_exercises,
-                           muscle_groups=muscle_groups,
+                           routine_sets=routine_sets,
                            routine_id=routine_id,
-                           settings=settings)
+                           settings=settings,
+                           exercises=all_exercises,
+                           muscle_groups=muscle_groups)
+
 
 @app.route("/preview-routine/<int:routine_id>")
 def preview_routine(routine_id):

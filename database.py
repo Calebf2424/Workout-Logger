@@ -203,7 +203,21 @@ def update_routine_set_position(set_id, position):
                 WHERE id = %s
             """, (position, set_id))
 
+def update_routine_set_count(set_id, new_count):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE routine_sets
+                SET sets = %s
+                WHERE id = %s
+            """, (new_count, set_id))
 
+def delete_routine_set(set_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM routine_sets WHERE id = %s", (set_id,))
+
+#accounts
 def create_user_account(username, password_hash, email, guest_id=None):
     with get_connection() as conn:
         with conn.cursor() as cur:
