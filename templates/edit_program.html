@@ -17,7 +17,7 @@
         <!-- Days -->
         <div class="mb-3">
           <label for="days" class="form-label fw-semibold">Split Length (Days)</label>
-          <input type="number" name="days" id="days" class="form-control" min="1" max="10" value="{{ program.split_length }}" required>
+          <input type="number" name="days" id="days" class="form-control" min="1" max="10" value="{{ program.days }}" required>
         </div>
 
         <!-- Loop -->
@@ -29,7 +29,7 @@
         <hr>
 
         <!-- Routine selectors for each day -->
-        {% for i in range(program.split_length) %}
+        {% for i in range(program.days) %}
         <div class="mb-3">
           <label for="routine_day_{{ i }}" class="form-label fw-semibold">Day {{ i + 1 }}</label>
           <select name="routine_day_{{ i }}" id="routine_day_{{ i }}" class="form-select">
