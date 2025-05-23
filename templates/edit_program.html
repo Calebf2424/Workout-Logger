@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Edit Program – Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center w-100" style="max-width: 500px;">
+  <div class="col-12">
+    <div class="card home-card p-4">
+      <h2 class="fw-bold mb-4 text-center">Edit Program</h2>
+
+      <form method="POST" action="{{ url_for('edit_program', program_id=program.id) }}">
+        <div class="mb-3">
+          <label for="name" class="form-label fw-semibold">Program Name</label>
+          <input type="text" name="name" id="name" class="form-control" value="{{ program.name }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="days" class="form-label fw-semibold">Split Length (Days)</label>
+          <input type="number" name="days" id="days" class="form-control" min="1" max="10" value="{{ program.split_length }}" required>
+        </div>
+
+        <div class="form-check form-switch mb-4">
+          <input class="form-check-input" type="checkbox" name="loop" id="loop" {% if program.loop %}checked{% endif %}>
+          <label class="form-check-label fw-semibold" for="loop">Loop Program</label>
+        </div>
+
+        <hr>
+
+        {% for i in range(program.split_length) %}
+        <div class="mb-3">
+          <label for="routine_day_{{ i }}" class="form-label fw-semibold">Day {{ i + 1 }}</label>
+          <select name="routine_day_{{ i }}" id="routine_day_{{ i }}" class="form-select">
+            <option value="rest">Rest Day</option>
+            {% for r in routines %}
+              <option value="{{ r.id }}"
+                {% if program_routines[i].routine_id == r.id %}selected{% endif %}>
+                {{ r.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+
+        <div class="d-grid gap-2 mt-4">
+          <button type="submit" class="btn btn-success">💾 Save Changes</button>
+          <a href="{{ url_for('view_programs') }}" class="btn btn-outline-secondary">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
