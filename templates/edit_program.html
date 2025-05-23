@@ -8,16 +8,19 @@
       <h2 class="fw-bold mb-4 text-center">Edit Program</h2>
 
       <form method="POST" action="{{ url_for('edit_program', program_id=program.id) }}">
+        <!-- Program Name -->
         <div class="mb-3">
           <label for="name" class="form-label fw-semibold">Program Name</label>
           <input type="text" name="name" id="name" class="form-control" value="{{ program.name }}" required>
         </div>
 
+        <!-- Days -->
         <div class="mb-3">
           <label for="days" class="form-label fw-semibold">Split Length (Days)</label>
-          <input type="number" name="days" id="days" class="form-control" min="2" max="10" value="{{ program.days }}" required>
+          <input type="number" name="days" id="days" class="form-control" min="1" max="10" value="{{ program.split_length }}" required>
         </div>
 
+        <!-- Loop -->
         <div class="form-check form-switch mb-4">
           <input class="form-check-input" type="checkbox" name="loop" id="loop" {% if program.loop %}checked{% endif %}>
           <label class="form-check-label fw-semibold" for="loop">Loop Program</label>
@@ -25,14 +28,16 @@
 
         <hr>
 
-        {% for i in range(program.days) %}
+        <!-- Routine selectors for each day -->
+        {% for i in range(program.split_length) %}
         <div class="mb-3">
           <label for="routine_day_{{ i }}" class="form-label fw-semibold">Day {{ i + 1 }}</label>
           <select name="routine_day_{{ i }}" id="routine_day_{{ i }}" class="form-select">
             <option value="rest">Rest Day</option>
-            {% for r in routines %}
+            {% set current = routines[i] if i < routines|length else None %}
+            {% for r in all_routines %}
               <option value="{{ r.id }}"
-                {% if routines[i].routine_id == r.id %}selected{% endif %}>
+                {% if current and current.routine_id == r.id %}selected{% endif %}>
                 {{ r.name }}
               </option>
             {% endfor %}
@@ -40,6 +45,7 @@
         </div>
         {% endfor %}
 
+        <!-- Buttons -->
         <div class="d-grid gap-2 mt-4">
           <button type="submit" class="btn btn-success">💾 Save Changes</button>
           <a href="{{ url_for('view_programs') }}" class="btn btn-outline-secondary">Back</a>
