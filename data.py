@@ -1,4 +1,9 @@
 from database import *
+import pytz                                                  #type: ignore
+from datetime import datetime
+from flask import request, session, flash, redirect, url_for, render_template #type: ignore
+from database import *
+
 #exercises on left associated muscle groups on right
 presaved_exercises = [
     {"name": "Hip Abduction Machine", "muscle": "Abductors"},
@@ -109,3 +114,193 @@ def register_custom_exercise(name, muscle, presaved_exercises, user_id):
 
     # Persist in DB
     insert_custom_exercise(name, muscle, user_id)
+
+# Get current user ID from session
+def get_current_user_id():
+    return session.get("user_id") or get_user_id_by_guest(session.get("guest_id"))
+
+# Get user settings with fallback
+def get_settings():
+    user_id = get_current_user_id()
+    return get_user_settings(user_id) or {
+        "rpe_enabled": False,
+        "timezone": "UTC",
+        "max_weight": 225
+    }
+
+# Get current local date based on settings
+def get_local_date_from_settings(settings):
+    tz = pytz.timezone(settings.get("timezone", "UTC"))
+    return datetime.now(tz).date().isoformat()
+
+# Get timezone object from settings
+def get_timezone_from_settings(settings):
+    return pytz.timezone(settings.get("timezone", "UTC"))
+
+# Sort muscle groups by preferred order
+def sort_muscle_groups(exercises, preferred_order):
+    muscles = set(e["muscle"] for e in exercises)
+    return sorted(muscles, key=lambda m: preferred_order.index(m) if m in preferred_order else float("inf"))
+
+# Expand sets in a routine to a flat list
+def expand_routine_sets(routine_sets):
+    expanded = []
+    for s in routine_sets:
+        for _ in range(s["sets"]):
+            expanded.append({
+                "id": s.get("id"),
+                "exercise": s["exercise"],
+                "sets": 1
+            })
+    return expanded
+
+# Advance to next set in routine session
+def advance_routine():
+    routine = session.get("active_routine")
+    if routine:
+        routine["current_index"] += 1
+        session["active_routine"] = routine
+
+# Discard a routine in session and delete it
+def discard_routine_session(routine_id):
+    delete_routine(routine_id)
+    session.pop("new_routine", None)
+    flash("Routine discarded.", "danger")
+    return redirect(url_for("premade"))
+
+def handle_create_routine_post():
+    user_id = get_current_user_id()
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
+    action = request.form.get("action")
+
+    if action == "add":
+        return handle_routine_add(user_id, all_exercises)
+    elif action == "save":
+        return handle_routine_save()
+    elif action == "discard":
+        rid = session.get("new_routine", {}).get("id")
+        if rid:
+            return discard_routine_session(rid)
+    return redirect(url_for("create_routine"))
+
+
+def handle_routine_add(user_id, all_exercises):
+    if "new_routine" not in session:
+        name = request.form.get("routine_name", "").strip()
+        if not name:
+            flash("Give your routine a name first!", "danger")
+            return redirect(url_for("create_routine"))
+
+        rid = insert_routine(name, user_id)
+        session["new_routine"] = {"id": rid, "name": name}
+        flash(f"Routine '{name}' created!", "success")
+        return redirect(url_for("create_routine"))
+
+    rid = session["new_routine"]["id"]
+    exercise = request.form.get("exercise")
+
+    if not exercise:
+        flash("Please select an exercise.", "danger")
+        return redirect(url_for("create_routine"))
+
+    if exercise == "__custom__":
+        name = request.form.get("custom_name", "").strip()
+        muscle = request.form.get("custom_muscle", "").strip()
+        if not name or not muscle:
+            flash("Please fill in both name and muscle group for custom exercise.", "danger")
+            return redirect(url_for("create_routine"))
+        register_custom_exercise(name, muscle, all_exercises, user_id)
+        exercise = name
+
+    sets_count = int(request.form.get("sets", 1))
+    insert_routine_set(rid, exercise, sets_count, user_id)
+    flash(f"Added {sets_count}× {exercise}", "success")
+    return redirect(url_for("create_routine"))
+
+
+def handle_routine_save():
+    if "new_routine" not in session:
+        flash("No routine in progress.", "warning")
+        return redirect(url_for("create_routine"))
+
+    rid = session["new_routine"]["id"]
+    order = request.form.get("order", "")
+    ids = [int(x) for x in order.split(",") if x.strip().isdigit()]
+    for index, set_id in enumerate(ids):
+        update_routine_set_position(set_id, index)
+
+    name = session["new_routine"]["name"]
+    flash(f"Routine “{name}” saved!", "success")
+    session.pop("new_routine", None)
+    return redirect(url_for("premade"))
+
+
+def render_create_routine_form():
+    settings = get_settings()
+    user_id = get_current_user_id()
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
+    muscle_groups = sort_muscle_groups(all_exercises, preferred_order)
+    current = session.get("new_routine")
+    current_sets = get_sets_for_routine(current["id"]) if current else []
+
+    return render_template(
+        "create_routine.html",
+        exercises=all_exercises,
+        muscle_groups=muscle_groups,
+        current_routine=current,
+        current_sets=current_sets,
+        settings=settings
+    )
+
+def handle_edit_routine_post(routine_id):
+    user_id = get_current_user_id()
+    action = request.form.get("action")
+
+    if action == "add":
+        return handle_edit_add_exercise(routine_id, user_id)
+    elif action == "delete":
+        set_id = int(request.form.get("set_id"))
+        delete_routine_set(set_id)
+        flash("Exercise removed from routine.", "warning")
+        return redirect(url_for("edit_routine", routine_id=routine_id))
+    elif action == "update":
+        set_id = int(request.form.get("set_id"))
+        new_sets = int(request.form.get("new_sets", 1))
+        update_routine_set_count(set_id, new_sets)
+        flash("Set count updated.", "success")
+        return redirect(url_for("edit_routine", routine_id=routine_id))
+
+    return redirect(url_for("edit_routine", routine_id=routine_id))
+
+
+def handle_edit_add_exercise(routine_id, user_id):
+    exercise = request.form.get("exercise")
+    if exercise == "__custom__":
+        name = request.form.get("custom_name", "").strip()
+        muscle = request.form.get("custom_muscle", "").strip()
+        if not name or not muscle:
+            flash("Custom exercise name and muscle are required.", "danger")
+            return redirect(url_for("edit_routine", routine_id=routine_id))
+
+        register_custom_exercise(name, muscle, presaved_exercises, user_id)
+        exercise = name
+
+    sets = int(request.form.get("sets", 1))
+    insert_routine_set(routine_id, exercise, sets, user_id)
+    flash(f"Added {sets}× {exercise}", "success")
+    return redirect(url_for("edit_routine", routine_id=routine_id))
+
+
+def render_edit_routine_form(routine_id):
+    settings = get_settings()
+    user_id = get_current_user_id()
+    all_exercises = presaved_exercises + get_all_custom_exercises(user_id)
+    muscle_groups = sort_muscle_groups(all_exercises, preferred_order)
+    routine_sets = get_sets_for_routine(routine_id)
+
+    return render_template("edit_routine.html",
+                           routine_sets=routine_sets,
+                           routine_id=routine_id,
+                           settings=settings,
+                           exercises=all_exercises,
+                           muscle_groups=muscle_groups)
