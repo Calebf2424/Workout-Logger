@@ -32,7 +32,7 @@
             <option value="rest">Rest Day</option>
             {% for r in routines %}
               <option value="{{ r.id }}"
-                {% if program_routines[i].routine_id == r.id %}selected{% endif %}>
+                {% if routines[i].routine_id == r.id %}selected{% endif %}>
                 {{ r.name }}
               </option>
             {% endfor %}
