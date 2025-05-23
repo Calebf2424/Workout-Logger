@@ -280,3 +280,116 @@ def set_user_settings(user_id, rpe_enabled, timezone, max_weight):
                               timezone = EXCLUDED.timezone,
                               max_weight = EXCLUDED.max_weight
             """, (user_id, rpe_enabled, timezone, max_weight))
+
+#programming
+def create_programs_table():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS programs (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    name TEXT NOT NULL,
+                    days INTEGER NOT NULL,
+                    loop BOOLEAN DEFAULT FALSE,
+                    is_active BOOLEAN DEFAULT FALSE,
+                    start_date DATE DEFAULT CURRENT_DATE
+                );
+            """)
+
+def create_program_routines_table():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS program_routines (
+                    id SERIAL PRIMARY KEY,
+                    program_id INTEGER REFERENCES programs(id) ON DELETE CASCADE,
+                    day_index INTEGER NOT NULL,
+                    routine_id INTEGER REFERENCES planned_routines(id)
+                );
+            """)
+
+def insert_program(user_id, name, days, loop):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO programs (user_id, name, days, loop)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id
+            """, (user_id, name, days, loop))
+            return cur.fetchone()["id"]
+
+def insert_program_routine(program_id, day_index, routine_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO program_routines (program_id, day_index, routine_id)
+                VALUES (%s, %s, %s)
+            """, (program_id, day_index, routine_id))
+def get_user_programs(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT * FROM programs
+                WHERE user_id = %s
+                ORDER BY is_active DESC, id DESC
+            """, (user_id,))
+            return cur.fetchall()
+
+def get_program_by_id(program_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM programs WHERE id = %s", (program_id,))
+            return cur.fetchone()
+
+def get_program_routines(program_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT pr.day_index, pr.routine_id, r.name
+                FROM program_routines pr
+                JOIN planned_routines r ON pr.routine_id = r.id
+                WHERE pr.program_id = %s
+                ORDER BY pr.day_index
+            """, (program_id,))
+            return cur.fetchall()
+
+def deactivate_all_programs(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE programs
+                SET is_active = FALSE
+                WHERE user_id = %s
+            """, (user_id,))
+
+def activate_program(program_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE programs
+                SET is_active = TRUE,
+                    start_date = CURRENT_DATE
+                WHERE id = %s
+            """, (program_id,))
+
+def delete_program(program_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM programs WHERE id = %s", (program_id,))
+
+def update_program_metadata(program_id, name, days, loop):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE programs
+                SET name = %s,
+                    days = %s,
+                    loop = %s
+                WHERE id = %s
+            """, (name, days, loop, program_id))
+
+def delete_program_routines(program_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM program_routines WHERE program_id = %s", (program_id,))

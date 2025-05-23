@@ -20,6 +20,8 @@ create_custom_exercise_table()
 create_planned_routines_table()
 create_routine_sets_table()
 create_user_settings_table()
+create_programs_table()
+create_program_routines_table()
 
 # --- SESSION HANDLING ---
 @app.before_request
@@ -481,7 +483,81 @@ def dev_usernames():
     return jsonify({"usernames": names})
 
 #programming routes
-@app.route("/split", methods=["GET", "POST"])
-def workout_split():
-    return render_template("index.html")
+@app.route("/programs")
+def view_programs():
+    user_id = get_current_user_id()
+    programs = get_user_programs(user_id)
+    return render_template("programs.html", programs=programs)
 
+@app.route("/create-program", methods=["GET", "POST"])
+def create_program():
+    user_id = get_current_user_id()
+    all_routines = get_all_routines(user_id)
+    settings = get_settings()
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        days = int(request.form.get("days", 3))
+        loop = request.form.get("loop") == "on"
+
+        if not name or days < 1 or days > 10:
+            flash("Invalid input.", "danger")
+            return redirect(url_for("create_program"))
+
+        program_id = insert_program(user_id, name, days, loop)
+
+        for i in range(days):
+            routine_id = request.form.get(f"routine_day_{i}")
+            if routine_id == "rest":
+                continue  # Skip rest days
+            insert_program_routine(program_id, i, int(routine_id))
+
+        flash("Program created!", "success")
+        return redirect(url_for("view_programs"))
+
+    return render_template("create_program.html", routines=all_routines, settings=settings)
+
+@app.route("/activate-program/<int:program_id>", methods=["POST"])
+def activate_selected_program(program_id):
+    user_id = get_current_user_id()
+    deactivate_all_programs(user_id)
+
+    # Get selected start day from form (defaults to 0)
+    start_day = int(request.form.get("start_day", 0))
+    activate_program(program_id, start_day)
+
+    flash("Program activated.", "success")
+    return redirect(url_for("view_programs"))
+
+@app.route("/delete-program/<int:program_id>", methods=["POST"])
+def delete_selected_program(program_id):
+    delete_program(program_id)
+    flash("Program deleted.", "danger")
+    return redirect(url_for("view_programs"))
+
+@app.route("/program-summary/<int:program_id>")
+def program_summary(program_id):
+    user_id = get_current_user_id()
+    program = get_program_by_id(program_id)
+    routines = get_program_routines(program_id)
+
+    # Expand sets for each routine and count muscles
+    total_sets = {}
+    for r in routines:
+        if r["routine_id"]:
+            sets = expand_routine_sets(get_sets_for_routine(r["routine_id"]))
+            mc = summarize_muscles(sets, user_id)
+            for m, count in mc.items():
+                total_sets[m] = total_sets.get(m, 0) + count
+
+    # Fill in zeros for missing muscles
+    full_counts = {m: total_sets.get(m, 0) for m in preferred_order}
+
+    return render_template("program_summary.html", program=program,
+                           routines=routines,
+                           set_counts=full_counts,
+                           preferred_order=preferred_order)
+
+@app.route("/edit-program/<int:program_id>", methods=["GET", "POST"])
+def edit_program(program_id):
+    return handle_edit_program(program_id)

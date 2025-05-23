@@ -304,3 +304,35 @@ def render_edit_routine_form(routine_id):
                            settings=settings,
                            exercises=all_exercises,
                            muscle_groups=muscle_groups)
+
+def handle_edit_program(program_id):
+    user_id = get_current_user_id()
+    program = get_program_by_id(program_id)
+    all_routines = get_all_routines(user_id)
+    current_routines = get_program_routines(program_id)
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        days = int(request.form.get("days", 3))
+        loop = request.form.get("loop") == "on"
+
+        if not name or days < 1 or days > 10:
+            flash("Invalid input.", "danger")
+            return redirect(url_for("edit_program", program_id=program_id))
+
+        update_program_metadata(program_id, name, days, loop)
+        delete_program(program_id)
+
+        for i in range(days):
+            routine_id = request.form.get(f"routine_day_{i}")
+            if routine_id != "rest":
+                insert_program_routine(program_id, i, int(routine_id))
+
+        flash("Program updated!", "success")
+        return redirect(url_for("view_programs"))
+
+    return render_template("edit_program.html",
+                           program=program,
+                           routines=current_routines,
+                           all_routines=all_routines,
+                           settings=get_settings())

@@ -1,62 +1,81 @@
-{# templates/index.html #}
 {% extends "base.html" %}
 {% block title %}Home – Workout Tracker{% endblock %}
 
 {% block content %}
-  <h1 class="text-white fw-bold mb-5">Workout Tracker</h1>
+<h1 class="text-white fw-bold mb-5">Workout Tracker</h1>
 
-  <div class="row g-4 w-100" style="max-width: 400px;">
-    <!-- Workouts -->
-    <div class="col-6">
-      <a href="{{ url_for('premade') }}" class="text-decoration-none">
-        <div class="home-card card">
-          <div class="card-body">
-            <i class="bi bi-graph-up"></i>
-            <h5 class="card-title">Workouts</h5>
-          </div>
-        </div>
-      </a>
-    </div>
-    
-    <!-- Log Sets -->
-    <div class="col-6">
-      <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
-        <div class="home-card card">
-          <div class="card-body">
-            <i class="bi bi-hourglass-top"></i>
-            <h5 class="card-title">Log Sets</h5>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <!-- History -->
-    <div class="col-6">
-      <a href="{{ url_for('history') }}" class="text-decoration-none">
-        <div class="home-card card">
-          <div class="card-body">
-            <i class="bi bi-calendar3"></i>
-            <h5 class="card-title">History</h5>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <!-- Settings -->
-    <div class="col-6">
-      <a href="{{ url_for('settings') }}" class="text-decoration-none">
-        <div class="home-card card">
-          <div class="card-body">
-            <i class="bi bi-gear"></i>
-            <h5 class="card-title">Settings</h5>
-          </div>
-        </div>
-      </a>
-    </div>
+{% if session.get("active_routine") %}
+  <div class="alert alert-primary text-center mb-4">
+    <div class="fw-semibold">Today’s Planned Routine</div>
+    <div>{{ session["active_routine"]["name"] }}</div>
   </div>
-  {% if is_guest %}
-    <div class="alert alert-info mt-4 text-center" role="alert">
-      Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
-    </div>
-  {% endif %}
+{% endif %}
+
+<div class="row g-4 w-100" style="max-width: 400px;">
+  <!-- Top Right: Workout Mode (Split) -->
+  <div class="col-6">
+    <a href="{{ url_for('workout_mode') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-flag"></i>
+          <h5 class="card-title">Split</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Top Left: Log Sets -->
+  <div class="col-6">
+    <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-hourglass-top"></i>
+          <h5 class="card-title">Log Sets</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Bottom Right: Workouts -->
+  <div class="col-6">
+    <a href="{{ url_for('premade') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-graph-up"></i>
+          <h5 class="card-title">Workouts</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Bottom Left: History -->
+  <div class="col-6">
+    <a href="{{ url_for('history') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-calendar3"></i>
+          <h5 class="card-title">History</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Settings Full Width -->
+  <div class="col-12">
+    <a href="{{ url_for('settings') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-gear"></i>
+          <h5 class="card-title">Settings</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{% if is_guest %}
+  <div class="alert alert-info mt-4 text-center" role="alert">
+    Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
+  </div>
+{% endif %}
 {% endblock %}
