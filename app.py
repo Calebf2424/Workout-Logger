@@ -539,9 +539,14 @@ def delete_selected_program(program_id):
 def program_summary(program_id):
     user_id = get_current_user_id()
     program = get_program_by_id(program_id)
+
+    if not program or program["user_id"] != user_id:
+        flash("Program not found.", "danger")
+        return redirect(url_for("view_programs"))
+
+    split_length = program["days"]
     routines = get_program_routines(program_id)
 
-    # Expand sets for each routine and count muscles
     total_sets = {}
     for r in routines:
         if r["routine_id"]:
@@ -550,13 +555,17 @@ def program_summary(program_id):
             for m, count in mc.items():
                 total_sets[m] = total_sets.get(m, 0) + count
 
-    # Fill in zeros for missing muscles
-    full_counts = {m: total_sets.get(m, 0) for m in preferred_order}
+    # Normalize to sets per 7 days
+    sets_per_week = {
+        m: round(total_sets.get(m, 0) * 7 / split_length, 2)
+        for m in preferred_order
+    }
 
-    return render_template("program_summary.html", program=program,
-                           routines=routines,
-                           set_counts=full_counts,
-                           preferred_order=preferred_order)
+    return render_template("program_summary.html",
+                           active_program=program,
+                           sets_per_week=sets_per_week,
+                           preferred_order=preferred_order,
+                           split_length=split_length)
 
 @app.route("/edit-program/<int:program_id>", methods=["GET", "POST"])
 def edit_program(program_id):
