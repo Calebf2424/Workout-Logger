@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Create Program – Workout Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center w-100" style="max-width: 600px;">
+  <div class="col-12">
+    <div class="card home-card p-4">
+      <h2 class="fw-bold mb-4 text-center">Create Program</h2>
+
+      <form method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label fw-semibold">Program Name</label>
+          <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="days" class="form-label fw-semibold">Split Length (Days)</label>
+          <input type="number" class="form-control" id="days" name="days" value="3" min="1" max="10" required onchange="generateDaySelectors()">
+        </div>
+
+        <div class="form-check form-switch mb-4">
+          <input class="form-check-input" type="checkbox" id="loop" name="loop">
+          <label class="form-check-label" for="loop">Loop Program</label>
+        </div>
+
+        <div id="routine-selectors">
+          <!-- JS will insert routine selectors here -->
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">✅ Create Program</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  const routines = {{ routines | tojson }};
+  const routineSelectors = document.getElementById("routine-selectors");
+  const daysInput = document.getElementById("days");
+
+  function generateDaySelectors() {
+    const numDays = parseInt(daysInput.value);
+    routineSelectors.innerHTML = "";  // Clear existing
+
+    for (let i = 0; i < numDays; i++) {
+      const dayGroup = document.createElement("div");
+      dayGroup.classList.add("mb-3");
+
+      const label = document.createElement("label");
+      label.classList.add("form-label", "fw-semibold");
+      label.textContent = `Day ${i + 1}`;
+      dayGroup.appendChild(label);
+
+      const select = document.createElement("select");
+      select.classList.add("form-select");
+      select.name = `routine_day_${i}`;
+
+      const restOption = document.createElement("option");
+      restOption.value = "rest";
+      restOption.textContent = "-- Rest Day --";
+      select.appendChild(restOption);
+
+      for (const r of routines) {
+        const opt = document.createElement("option");
+        opt.value = r.id;
+        opt.textContent = r.name;
+        select.appendChild(opt);
+      }
+
+      dayGroup.appendChild(select);
+      routineSelectors.appendChild(dayGroup);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", generateDaySelectors);
+</script>
+{% endblock %}
