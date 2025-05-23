@@ -2,82 +2,68 @@
 {% block title %}Home – Workout Tracker{% endblock %}
 
 {% block content %}
-<h1 class="text-white fw-bold mb-5">Workout Tracker</h1>
+  <h1 class="text-white fw-bold mb-5">Workout Tracker</h1>
 
-{% if session.get("active_routine") %}
-  <div class="alert alert-primary text-center mb-4">
-    <div class="fw-semibold">Today’s Planned Routine</div>
-    <div>{{ session["active_routine"]["name"] }}</div>
-  </div>
-{% endif %}
-
-  <!-- Container -->
-  <div class="row g-4 w-100" style="max-width: 400px;"></div>
-
-   <!-- Premade Workouts -->
-  <div class="col-6">
-    <a href="{{ url_for('premade') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-graph-up"></i>
-          <h5 class="card-title">Workouts</h5>
+  <div class="row g-4 w-100" style="max-width: 400px;">
+    <!-- Workouts -->
+    <div class="col-6">
+      <a href="{{ url_for('premade') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-graph-up"></i>
+            <h5 class="card-title">Workouts</h5>
+          </div>
         </div>
-      </div>
+      </a>
+    </div>
+
+    <!-- Manage Program -->
+    <div class="col-6">
+      <a href="{{ url_for('view_programs') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-hourglass-top"></i>
+            <h5 class="card-title">Manage Program</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- History -->
+    <div class="col-6">
+      <a href="{{ url_for('history') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-calendar3"></i>
+            <h5 class="card-title">History</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Individual Sets -->
+    <div class="col-6">
+      <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
+        <div class="home-card card">
+          <div class="card-body">
+            <i class="bi bi-pencil-square"></i>
+            <h5 class="card-title">Individual Sets</h5>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Full-width Settings Button -->
+  <div class="mt-4 w-100 d-flex justify-content-center">
+    <a href="{{ url_for('settings') }}" class="btn btn-outline-light w-100" style="max-width: 400px;">
+      <i class="bi bi-gear"></i> Settings
     </a>
   </div>
 
-  <!-- Programs -->
-  <div class="col-6">
-    <a href="{{ url_for('view_programs') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-flag"></i>
-          <h5 class="card-title">Split</h5>
-        </div>
-      </div>
-    </a>
-  </div>
-
-    <!-- Log Sets -->
-  <div class="col-6">
-    <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-hourglass-top"></i>
-          <h5 class="card-title">Log Sets</h5>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- Bottom Left: History -->
-  <div class="col-6">
-    <a href="{{ url_for('history') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-calendar3"></i>
-          <h5 class="card-title">History</h5>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- Settings Full Width -->
-  <div class="col-12">
-    <a href="{{ url_for('settings') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-gear"></i>
-          <h5 class="card-title">Settings</h5>
-        </div>
-      </div>
-    </a>
-  </div>
-</div>
-
-{% if is_guest %}
-  <div class="alert alert-info mt-4 text-center" role="alert">
-    You are not currently logged in. Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
-  </div>
-{% endif %}
+  {% if is_guest %}
+    <div class="alert alert-info mt-4 text-center" role="alert">
+      You are not logged in. Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
+    </div>
+  {% endif %}
 {% endblock %}
