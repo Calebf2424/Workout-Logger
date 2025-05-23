@@ -124,7 +124,7 @@ def get_settings():
     user_id = get_current_user_id()
     return get_user_settings(user_id) or {
         "rpe_enabled": False,
-        "timezone": "UTC",
+        "timezone": "America/Edmonton",
         "max_weight": 225
     }
 
