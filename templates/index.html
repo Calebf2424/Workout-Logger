@@ -11,10 +11,24 @@
   </div>
 {% endif %}
 
-<div class="row g-4 w-100" style="max-width: 400px;">
-  <!-- Top Right: Workout Mode (Split) -->
+
+
+   <!-- Premade Workouts -->
   <div class="col-6">
-    <a href="{{ url_for('workout_mode') }}" class="text-decoration-none">
+    <a href="{{ url_for('premade') }}" class="text-decoration-none">
+      <div class="home-card card">
+        <div class="card-body">
+          <i class="bi bi-graph-up"></i>
+          <h5 class="card-title">Workouts</h5>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="row g-4 w-100" style="max-width: 400px;">
+  <!-- Programs -->
+  <div class="col-6">
+    <a href="{{ url_for('view_programs') }}" class="text-decoration-none">
       <div class="home-card card">
         <div class="card-body">
           <i class="bi bi-flag"></i>
@@ -24,25 +38,13 @@
     </a>
   </div>
 
-  <!-- Top Left: Log Sets -->
+    <!-- Log Sets -->
   <div class="col-6">
     <a href="{{ url_for('add_workout') }}" class="text-decoration-none">
       <div class="home-card card">
         <div class="card-body">
           <i class="bi bi-hourglass-top"></i>
           <h5 class="card-title">Log Sets</h5>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- Bottom Right: Workouts -->
-  <div class="col-6">
-    <a href="{{ url_for('premade') }}" class="text-decoration-none">
-      <div class="home-card card">
-        <div class="card-body">
-          <i class="bi bi-graph-up"></i>
-          <h5 class="card-title">Workouts</h5>
         </div>
       </div>
     </a>
@@ -75,7 +77,7 @@
 
 {% if is_guest %}
   <div class="alert alert-info mt-4 text-center" role="alert">
-    Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
+    You are not currently logged in. Accounts can now be created in <a href="{{ url_for('settings') }}" class="alert-link">Settings</a>!
   </div>
 {% endif %}
 {% endblock %}
