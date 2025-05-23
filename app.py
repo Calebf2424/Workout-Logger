@@ -555,16 +555,21 @@ def program_summary(program_id):
             for m, count in mc.items():
                 total_sets[m] = total_sets.get(m, 0) + count
 
-    # Normalize to sets per 7 days
-    sets_per_week = {
-        m: round(total_sets.get(m, 0) * 7 / split_length, 2)
-        for m in preferred_order
-    }
+    # Compute and sort sets per 7 days
+    sets_per_week = {}
+    for m in preferred_order:
+        weekly = total_sets.get(m, 0) * 7 / split_length
+        if weekly.is_integer():
+            sets_per_week[m] = int(weekly)
+        else:
+            sets_per_week[m] = round(weekly, 2)
+
+    # Sort by most sets first, then alphabetically
+    sorted_sets = sorted(sets_per_week.items(), key=lambda x: (-x[1], x[0].lower()))
 
     return render_template("program_summary.html",
                            active_program=program,
-                           sets_per_week=sets_per_week,
-                           preferred_order=preferred_order,
+                           sorted_sets=sorted_sets,
                            split_length=split_length)
 
 @app.route("/edit-program/<int:program_id>", methods=["GET", "POST"])
