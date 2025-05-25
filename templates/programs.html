@@ -27,12 +27,14 @@
 
             <!-- Activate -->
             <form method="POST" action="{{ url_for('activate_selected_program', program_id=p.id) }}">
-              <select name="start_day" class="form-select form-select-sm d-inline-block w-auto me-1">
-                {% for i in range(p.days) %}
-                  <option value="{{ i }}">Day {{ i + 1 }}</option>
+            <select name="start_day" class="form-select mb-2" required>
+                {% for r in p.routines %}
+                <option value="{{ loop.index0 }}">
+                    Day {{ loop.index }} – {{ r.name if r.routine_id else 'Rest Day' }}
+                </option>
                 {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-outline-success btn-sm">✅ Activate</button>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-success w-100">Activate</button>
             </form>
 
             <!-- Edit -->

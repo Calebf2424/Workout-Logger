@@ -363,15 +363,16 @@ def deactivate_all_programs(user_id):
                 WHERE user_id = %s
             """, (user_id,))
 
-def activate_program(program_id):
+def activate_program(program_id, start_day=0):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
                 UPDATE programs
                 SET is_active = TRUE,
-                    start_date = CURRENT_DATE
+                    start_date = CURRENT_DATE,
+                    current_day = %s
                 WHERE id = %s
-            """, (program_id,))
+            """, (start_day, program_id))
 
 def delete_program(program_id):
     with get_connection() as conn:
@@ -393,3 +394,25 @@ def delete_program_routines(program_id):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM program_routines WHERE program_id = %s", (program_id,))
+
+def get_active_program(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT * FROM programs
+                WHERE user_id = %s AND is_active = TRUE
+                LIMIT 1
+            """, (user_id,))
+            return cur.fetchone()
+
+def get_routine_by_day(program_id, day_index):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT r.id, r.name
+                FROM program_routines pr
+                JOIN planned_routines r ON pr.routine_id = r.id
+                WHERE pr.program_id = %s AND pr.day_index = %s
+                LIMIT 1
+            """, (program_id, day_index))
+            return cur.fetchone()

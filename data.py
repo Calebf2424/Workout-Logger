@@ -355,4 +355,3 @@ def handle_edit_program(program_id):
                            routines=padded_routines,
                            all_routines=all_routines,
                            settings=get_settings())
-

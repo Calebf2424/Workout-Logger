@@ -5,6 +5,29 @@
   <h2 class="text-white fw-bold mb-4">Premade Workouts</h2>
 
   <div class="w-100" style="max-width: 400px;">
+    {% if today_routine %}
+      <div class="home-card mb-4 p-3 border border-success border-2">
+        <form method="POST" class="d-flex align-items-center justify-content-between">
+          <button
+              type="submit"
+              name="action"
+              value="start_{{ today_routine.id }}"
+              class="btn btn-link text-success text-decoration-none fw-bold flex-grow-1 text-start"
+              style="font-size: 1.4rem;">
+                Today's Scheduled: {{ today_routine.name }}
+          </button>
+          <button type="submit"
+                  name="action"
+                  value="preview_{{ today_routine.id }}"
+                  formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
+                  formmethod="get"
+                  class="btn btn-sm btn-link text-success p-0"
+                  aria-label="Preview">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </form>
+      </div>
+    {% endif %}
 
     <!-- Routine Cards -->
     {% for r in routines %}
