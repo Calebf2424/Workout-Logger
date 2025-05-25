@@ -30,38 +30,36 @@
             </div>
           </div>
 
-            {% if p.id == active_id %}
-            <!-- Deactivate Button -->
-            <form method="POST" action="{{ url_for('deactivate_selected_program', program_id=p.id) }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deactivate</button>
-            </form>
-            {% else %}
-            <!-- Activate Button with JS trigger -->
-            <button type="button" class="btn btn-sm btn-outline-success w-100"
-                    onclick="openModal({{ p.id }}, {{ p.routines|tojson|safe }})">
-                Activate
-            </button>
-            {% endif %}
+          {% if p.id == active_id %}
+          <!-- Deactivate Button -->
+          <form method="POST" action="{{ url_for('deactivate_selected_program', program_id=p.id) }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deactivate</button>
+          </form>
+          {% else %}
+          <!-- Activate Button -->
+          <button type="button" class="btn btn-sm btn-outline-success w-100"
+                  onclick="openActivateForm({{ p.id }})">
+              Activate
+          </button>
+          {% endif %}
 
-
-
-          <!-- Start Day Selection -->
+          <!-- Start Day Selection Form (Initially Hidden) -->
           <form method="POST"
                 id="activate-form-{{ p.id }}"
                 action="{{ url_for('activate_selected_program', program_id=p.id) }}"
                 style="display: none;">
-            <div class="mb-2">
-            <label class="form-label fw-semibold mb-1">Choose Start Day for Today:</label>
-            <div class="input-group">
+            <div class="mb-2 mt-2">
+              <label class="form-label fw-semibold mb-1">Choose Start Day for Today:</label>
+              <div class="input-group">
                 <select name="start_day" class="form-select">
-                {% for r in p.routines %}
+                  {% for r in p.routines %}
                     <option value="{{ loop.index0 }}">
-                    Day {{ loop.index }} – {{ r.name if r.routine_id else 'Rest Day' }}
+                      Day {{ loop.index }} – {{ r.name if r.routine_id else 'Rest Day' }}
                     </option>
-                {% endfor %}
+                  {% endfor %}
                 </select>
                 <button type="submit" class="btn btn-success">Start</button>
-            </div>
+              </div>
             </div>
           </form>
         </div>
@@ -80,16 +78,17 @@
 
 {% block page_scripts %}
 <script>
-function openModal(programId) {
-  // Hide all other activate forms first
+function openActivateForm(programId) {
+  // Hide all activate forms
   document.querySelectorAll('[id^="activate-form-"]').forEach(form => {
     form.style.display = 'none';
   });
 
-  // Show only the selected one
+  // Show the selected one
   const form = document.getElementById(`activate-form-${programId}`);
   if (form) {
     form.style.display = "block";
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 </script>
