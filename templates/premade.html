@@ -5,7 +5,7 @@
   <h2 class="text-white fw-bold mb-4">Premade Workouts</h2>
 
   <div class="w-100" style="max-width: 400px;">
-    {% if today_routine %}
+    {% if today_routine and today_routine.routine_id %}
       <div class="home-card mb-4 p-3 border border-success border-2">
         <form method="POST" class="d-flex align-items-center justify-content-between">
           <button
@@ -27,7 +27,14 @@
           </button>
         </form>
       </div>
+    {% else %}
+      <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
+        <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
+          Today is a Rest Day
+        </p>
+      </div>
     {% endif %}
+
 
     <!-- Routine Cards -->
     {% for r in routines %}
