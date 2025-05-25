@@ -29,7 +29,6 @@
         <hr>
 
         <!-- Routine selectors for each day -->
-        {% for i in range(program.days) %}
         <div class="mb-3">
           <label for="routine_day_{{ i }}" class="form-label fw-semibold">Day {{ i + 1 }}</label>
           <select name="routine_day_{{ i }}" id="routine_day_{{ i }}" class="form-select">
@@ -43,7 +42,6 @@
             {% endfor %}
           </select>
         </div>
-        {% endfor %}
 
         <!-- Buttons -->
         <div class="d-grid gap-2 mt-4">
@@ -55,3 +53,63 @@
   </div>
 </div>
 {% endblock %}
+
+{% block page_scripts %}
+<script>
+  const allRoutines = {{ all_routines | tojson }};
+  const currentRoutines = {{ routines | tojson }};
+  const daysInput = document.getElementById("days");
+  const container = document.createElement("div");
+  container.id = "routine-selectors";
+
+  function generateDaySelectors() {
+    const numDays = parseInt(daysInput.value);
+    container.innerHTML = "";
+
+    for (let i = 0; i < numDays; i++) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "mb-3";
+
+      const label = document.createElement("label");
+      label.className = "form-label fw-semibold";
+      label.textContent = `Day ${i + 1}`;
+      label.setAttribute("for", `routine_day_${i}`);
+      wrapper.appendChild(label);
+
+      const select = document.createElement("select");
+      select.className = "form-select";
+      select.name = `routine_day_${i}`;
+      select.id = `routine_day_${i}`;
+
+      const restOption = document.createElement("option");
+      restOption.value = "rest";
+      restOption.textContent = "-- Rest Day --";
+      select.appendChild(restOption);
+
+      for (const routine of allRoutines) {
+        const option = document.createElement("option");
+        option.value = routine.id;
+        option.textContent = routine.name;
+
+        if (currentRoutines[i] && currentRoutines[i].routine_id === routine.id) {
+          option.selected = true;
+        }
+
+        select.appendChild(option);
+      }
+
+      wrapper.appendChild(select);
+      container.appendChild(wrapper);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("form");
+    const splitter = form.querySelector("hr");
+    splitter.insertAdjacentElement("afterend", container);
+    generateDaySelectors();
+    daysInput.addEventListener("change", generateDaySelectors);
+  });
+</script>
+{% endblock %}
+
