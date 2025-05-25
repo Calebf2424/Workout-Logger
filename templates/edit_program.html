@@ -28,19 +28,8 @@
 
         <hr>
 
-        <!-- Routine selectors for each day -->
-        <div class="mb-3">
-          <label for="routine_day_{{ i }}" class="form-label fw-semibold">Day {{ i + 1 }}</label>
-          <select name="routine_day_{{ i }}" id="routine_day_{{ i }}" class="form-select">
-            <option value="rest">Rest Day</option>
-            {% set current = routines[i] if i < routines|length else None %}
-            {% for r in all_routines %}
-              <option value="{{ r.id }}"
-                {% if current and current.routine_id == r.id %}selected{% endif %}>
-                {{ r.name }}
-              </option>
-            {% endfor %}
-          </select>
+        <div id="routine-selectors">
+          <!-- JS will insert routine selectors here -->
         </div>
 
         <!-- Buttons -->
