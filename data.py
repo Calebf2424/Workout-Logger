@@ -408,4 +408,4 @@ def handle_premade(request):
 
     return render_template("premade.html",
                            routines=routines,
-                           today_routine=today_routine)
+                           today_routine=today_routine, active_program=active_program)

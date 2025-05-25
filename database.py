@@ -417,10 +417,3 @@ def get_routine_by_day(program_id, day_index):
                 LIMIT 1
             """, (program_id, day_index))
             return cur.fetchone()
-
-def reset_programs_table():
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            # Drop the existing table (if it exists)
-            cur.execute("DROP TABLE IF EXISTS programs CASCADE")
-            conn.commit()
