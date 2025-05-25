@@ -9,50 +9,44 @@
 
       {% if programs %}
         {% for p in programs %}
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div>
-                <h5 class="mb-0">{{ p.name }}</h5>
-                <small class="text-muted">{{ p.days }}-day split{% if p.loop %} (Looping){% endif %}</small>
-              </div>
+        <div class="card p-3 mb-4 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <h5 class="mb-0">{{ p.name }}</h5>
+              <small class="text-muted">{{ p.days }}-day split{% if p.loop %} (Looping){% endif %}</small>
             </div>
-
-            <!-- Activate button -->
-            <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="toggleControls({{ p.id }})">
-              Activate
-            </button>
-
-            <!-- Hidden controls shown on activate -->
-            <div id="controls-{{ p.id }}" style="display:none;" class="mt-3">
-              <form method="POST" action="{{ url_for('activate_selected_program', program_id=p.id) }}">
-                <select name="start_day" class="form-select mb-2" required>
-                  {% for i in range(p.days) %}
-                    {% set r = p.routines[i] if i < p.routines|length else None %}
-                    <option value="{{ i }}">Day {{ i + 1 }} – {{ r.name if r and r.routine_id else 'Rest Day' }}</option>
-                  {% endfor %}
-                </select>
-                <div class="d-flex gap-2">
-                  <button type="submit" class="btn btn-sm btn-success w-50">Confirm</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary w-50" onclick="toggleControls({{ p.id }})">Cancel</button>
-                </div>
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('program_summary', program_id=p.id) }}" class="btn btn-sm btn-outline-primary" title="Summary">
+                <i class="bi bi-bar-chart-line"></i>
+              </a>
+              <a href="{{ url_for('edit_program', program_id=p.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form method="POST" action="{{ url_for('delete_selected_program', program_id=p.id) }}" onsubmit="return confirm('Delete this program?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </button>
               </form>
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <a href="{{ url_for('program_summary', program_id=p.id) }}" class="btn btn-sm btn-outline-primary" title="Summary">
-                  <i class="bi bi-bar-chart-line"></i>
-                </a>
-                <a href="{{ url_for('edit_program', program_id=p.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
-                  <i class="bi bi-pencil"></i>
-                </a>
-                <form method="POST" action="{{ url_for('delete_selected_program', program_id=p.id) }}" onsubmit="return confirm('Delete this program?');">
-                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              </div>
             </div>
-
           </div>
+
+          <button type="button" class="btn btn-sm btn-outline-success w-100 mb-2" onclick="toggleDayForm({{ p.id }})">
+            Activate
+          </button>
+
+          <form method="POST"
+                id="activate-form-{{ p.id }}"
+                action="{{ url_for('activate_selected_program', program_id=p.id) }}"
+                style="display: none;">
+            <div class="input-group mb-2">
+              <select name="start_day" class="form-select">
+                {% for i, r in p.routines|enumerate %}
+                <option value="{{ i }}">Day {{ i + 1 }} – {{ r.name if r.routine_id else 'Rest Day' }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-success">Start</button>
+            </div>
+          </form>
         </div>
         {% endfor %}
       {% else %}
@@ -69,13 +63,9 @@
 
 {% block page_scripts %}
 <script>
-  function toggleControls(programId) {
-    const el = document.getElementById(`controls-${programId}`);
-    if (el.style.display === 'none') {
-      el.style.display = 'block';
-    } else {
-      el.style.display = 'none';
-    }
+  function toggleDayForm(id) {
+    const form = document.getElementById(`activate-form-${id}`);
+    form.style.display = form.style.display === "none" ? "block" : "none";
   }
 </script>
 {% endblock %}
