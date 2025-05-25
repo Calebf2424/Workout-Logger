@@ -291,9 +291,10 @@ def create_programs_table():
                     user_id INTEGER REFERENCES users(id),
                     name TEXT NOT NULL,
                     days INTEGER NOT NULL,
-                    loop BOOLEAN DEFAULT FALSE,
+                    loop BOOLEAN DEFAULT TRUE,
                     is_active BOOLEAN DEFAULT FALSE,
                     start_date DATE DEFAULT CURRENT_DATE
+                    current_day INTEGER DEFAULT 0
                 );
             """)
 
@@ -416,3 +417,10 @@ def get_routine_by_day(program_id, day_index):
                 LIMIT 1
             """, (program_id, day_index))
             return cur.fetchone()
+
+def reset_programs_table():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            # Drop the existing table (if it exists)
+            cur.execute("DROP TABLE IF EXISTS programs CASCADE")
+            conn.commit()
