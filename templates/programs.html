@@ -30,18 +30,22 @@
             </div>
           </div>
 
+          <!-- Activate Button -->
           <button type="button" class="btn btn-sm btn-outline-success w-100 mb-2" onclick="toggleDayForm({{ p.id }})">
             Activate
           </button>
 
+          <!-- Start Day Selection -->
           <form method="POST"
                 id="activate-form-{{ p.id }}"
                 action="{{ url_for('activate_selected_program', program_id=p.id) }}"
                 style="display: none;">
             <div class="input-group mb-2">
               <select name="start_day" class="form-select">
-                {% for i, r in p.routines|enumerate %}
-                <option value="{{ i }}">Day {{ i + 1 }} – {{ r.name if r.routine_id else 'Rest Day' }}</option>
+                {% for r in p.routines %}
+                  <option value="{{ loop.index0 }}">
+                    Day {{ loop.index }} – {{ r.name if r.routine_id else 'Rest Day' }}
+                  </option>
                 {% endfor %}
               </select>
               <button type="submit" class="btn btn-success">Start</button>
