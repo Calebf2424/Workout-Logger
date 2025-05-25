@@ -29,18 +29,20 @@
               </form>
             </div>
           </div>
+          
+            {% if p.id == active_id %}
+            <!-- Deactivate Button -->
+            <form method="POST" action="{{ url_for('deactivate_selected_program', program_id=p.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deactivate</button>
+            </form>
+            {% else %}
+            <!-- Activate Button with JS trigger -->
+            <button type="button" class="btn btn-sm btn-outline-success w-100"
+                    onclick="openModal({{ p.id }}, {{ p.routines|tojson|safe }})">
+                Activate
+            </button>
+            {% endif %}
 
-          <!-- Activate Button -->
-        {% if p.id == active_id %}
-        <form method="POST" action="{{ url_for('deactivate_selected_program', program_id=p.id) }}">
-            <button type="submit" class="btn btn-sm btn-outline-danger w-100">Deactivate</button>
-        </form>
-        {% else %}
-        <button type="button" class="btn btn-sm btn-outline-success w-100"
-                onclick="openModal({{ p.id }}, {{ p.routines|tojson|safe }})">
-            Activate
-        </button>
-        {% endif %}
 
 
           <!-- Start Day Selection -->
@@ -78,9 +80,30 @@
 
 {% block page_scripts %}
 <script>
-  function toggleDayForm(id) {
-    const form = document.getElementById(`activate-form-${id}`);
-    form.style.display = form.style.display === "none" ? "block" : "none";
-  }
+function openModal(programId, routines) {
+  const modal = document.getElementById("startDayModal");
+  const form = document.getElementById("modalForm");
+  const select = document.getElementById("modalDaySelect");
+
+  form.action = `/activate-program/${programId}`;
+  select.innerHTML = "";
+
+  const defaultOption = document.createElement("option");
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  defaultOption.textContent = "Choose start day for today";
+  select.appendChild(defaultOption);
+
+  routines.forEach((r, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `Day ${i + 1} – ${r.routine_id ? r.name : "Rest Day"}`;
+    select.appendChild(opt);
+  });
+
+  document.getElementById("modalStartDay").value = select.value;
+  modal.style.display = "flex";
+}
+
 </script>
 {% endblock %}
