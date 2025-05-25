@@ -509,7 +509,11 @@ def view_programs():
     active_id = active["id"] if active else None
 
     for p in programs:
-        p["routines"] = get_program_routines(p["id"])
+        raw_routines = get_program_routines(p["id"])  # only filled days
+        padded = [None] * p["days"]  # fill with None
+        for r in raw_routines:
+            padded[r["day_index"]] = r  # insert routine into correct index
+        p["routines"] = padded
 
     return render_template("programs.html", programs=programs, active_id=active_id)
 
