@@ -71,6 +71,7 @@
                 </a>
                 
                 <!-- Delete -->
+              {% if not r.is_in_active_program %}
                 <button type="submit"
                         name="action"
                         value="delete_{{ r.id }}"
@@ -79,6 +80,9 @@
                         onclick="return confirm('Are you sure you want to delete the routine: {{ r.name }}?');">
                   <i class="bi bi-trash-fill"></i>
                 </button>
+              {% else %}
+                <i class="bi bi-lock-fill text-muted" title="Part of active program – cannot delete"></i>
+              {% endif %}
               </div>              
         </form>
       </div>

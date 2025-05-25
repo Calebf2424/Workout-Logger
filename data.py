@@ -355,3 +355,55 @@ def handle_edit_program(program_id):
                            routines=padded_routines,
                            all_routines=all_routines,
                            settings=get_settings())
+
+def handle_premade(request):
+    user_id = get_current_user_id()
+    routines = get_all_routines(user_id)
+    program = get_active_program(user_id)
+    today_routine = None
+    active_routine_ids = set()
+
+    # If there's an active program, figure out today and tag routines
+    if program:
+        days = program["days"]
+        loop = program["loop"]
+        start_date = program["start_date"]
+        today = datetime.now(get_timezone_from_settings(get_settings())).date()
+        delta_days = (today - start_date).days
+        current_day = delta_days % days if loop else delta_days
+
+        # Get all routine IDs used in the active program
+        for r in get_program_routines(program["id"]):
+            if r.get("routine_id"):
+                active_routine_ids.add(r["routine_id"])
+
+        if current_day < days:
+            today_routine = get_routine_by_day(program["id"], current_day)
+
+    # Mark each routine as in use or not
+    for r in routines:
+        r["is_in_active_program"] = r["id"] in active_routine_ids
+
+    # Handle POST actions
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "create":
+            return redirect(url_for("create_routine"))
+
+        elif action.startswith("start_"):
+            routine_id = int(action.replace("start_", ""))
+            return redirect(url_for("start_routine", routine_id=routine_id))
+
+        elif action.startswith("delete_"):
+            routine_id = int(action.replace("delete_", ""))
+            if routine_id in active_routine_ids:
+                flash("This routine is part of your active program and cannot be deleted.", "danger")
+                return redirect(url_for("premade"))
+            delete_routine(routine_id)
+            flash("Routine deleted.", "success")
+            return redirect(url_for("premade"))
+
+    return render_template("premade.html",
+                           routines=routines,
+                           today_routine=today_routine)

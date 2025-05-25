@@ -297,38 +297,7 @@ def edit_set_route(set_id):
 # --- PREMADE ROUTINES ---
 @app.route("/premade", methods=["GET", "POST"])
 def premade():
-    if request.method == "POST":
-        action = request.form.get("action")
-        if action == "create":
-            return redirect(url_for("create_routine"))
-        elif action.startswith("start_"):
-            routine_id = int(action.replace("start_", ""))
-            return redirect(url_for("start_routine", routine_id=routine_id))
-        elif action.startswith("delete_"):
-            routine_id = int(action.replace("delete_", ""))
-            delete_routine(routine_id)
-            return redirect(url_for("premade"))
-
-    user_id = get_current_user_id()
-    routines = get_all_routines(user_id)
-
-    # Check if there is an active program
-    program = get_active_program(user_id)
-    today_routine = None
-
-    if program:
-        days = program["days"]
-        loop = program["loop"]
-        start_date = program["start_date"]
-        today = datetime.now(get_timezone_from_settings(get_settings())).date()
-        delta_days = (today - start_date).days
-        current_day = delta_days % days if loop else delta_days
-        if current_day < days:
-            today_routine = get_routine_by_day(program["id"], current_day)
-
-    return render_template("premade.html",
-                           routines=routines,
-                           today_routine=today_routine)
+    return handle_premade(request)
 
 #start
 @app.route("/start-routine/<int:routine_id>")
