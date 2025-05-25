@@ -37,7 +37,8 @@
                 action="{{ url_for('activate_selected_program', program_id=p.id) }}"
                 style="display: none;" class="mt-2">
             <select name="start_day" class="form-select mb-2" required>
-                {% for i, r in enumerate(p.routines) %}
+                {% for r in p.routines %}
+                {% set i = loop.index0 %}
                 <option value="{{ i }}">Day {{ i + 1 }} – {{ r.name if r.routine_id else 'Rest Day' }}</option>
                 {% endfor %}
             </select>
