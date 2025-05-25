@@ -359,32 +359,34 @@ def handle_edit_program(program_id):
 def handle_premade(request):
     user_id = get_current_user_id()
     routines = get_all_routines(user_id)
-    program = get_active_program(user_id)
+    programs = get_user_programs(user_id)
     today_routine = None
-    active_routine_ids = set()
 
-    # If there's an active program, figure out today and tag routines
-    if program:
-        days = program["days"]
-        loop = program["loop"]
-        start_date = program["start_date"]
+    # Collect all routine_ids used across all programs
+    routine_ids_in_programs = set()
+    for p in programs:
+        for r in get_program_routines(p["id"]):
+            if r.get("routine_id"):
+                routine_ids_in_programs.add(r["routine_id"])
+
+    # Identify today’s routine if there's an active program
+    active_program = get_active_program(user_id)
+    if active_program:
+        days = active_program["days"]
+        loop = active_program["loop"]
+        start_date = active_program["start_date"]
         today = datetime.now(get_timezone_from_settings(get_settings())).date()
         delta_days = (today - start_date).days
         current_day = delta_days % days if loop else delta_days
 
-        # Get all routine IDs used in the active program
-        for r in get_program_routines(program["id"]):
-            if r.get("routine_id"):
-                active_routine_ids.add(r["routine_id"])
-
         if current_day < days:
-            today_routine = get_routine_by_day(program["id"], current_day)
+            today_routine = get_routine_by_day(active_program["id"], current_day)
 
-    # Mark each routine as in use or not
+    # Annotate routines for deletion protection
     for r in routines:
-        r["is_in_active_program"] = r["id"] in active_routine_ids
+        r["is_in_active_program"] = r["id"] in routine_ids_in_programs
 
-    # Handle POST actions
+    # Handle POST
     if request.method == "POST":
         action = request.form.get("action")
 
@@ -397,8 +399,8 @@ def handle_premade(request):
 
         elif action.startswith("delete_"):
             routine_id = int(action.replace("delete_", ""))
-            if routine_id in active_routine_ids:
-                flash("This routine is part of your active program and cannot be deleted.", "danger")
+            if routine_id in routine_ids_in_programs:
+                flash("This routine is part of a program and cannot be deleted.", "danger")
                 return redirect(url_for("premade"))
             delete_routine(routine_id)
             flash("Routine deleted.", "success")

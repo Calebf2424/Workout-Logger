@@ -81,7 +81,14 @@
                   <i class="bi bi-trash-fill"></i>
                 </button>
               {% else %}
-                <i class="bi bi-lock-fill text-muted" title="Part of active program – cannot delete"></i>
+                <button type="submit"
+                        name="action"
+                        value="delete_{{ r.id }}"
+                        class="btn btn-sm btn-link text-muted p-0"
+                        aria-label="Cannot Delete"
+                        title="This routine is part of a program and cannot be deleted.">
+                  <i class="bi bi-lock-fill"></i>
+                </button>
               {% endif %}
               </div>              
         </form>
