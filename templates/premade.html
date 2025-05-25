@@ -16,7 +16,7 @@
                   value="start_{{ today_routine.id }}"
                   class="btn btn-link text-success text-decoration-none fw-bold flex-grow-1 text-start"
                   style="font-size: 1.4rem;">
-            Today's Scheduled: {{ today_routine.name }}
+            Day {{ current_day_index + 1 }} – {{ today_routine.name }}
           </button>
           <button type="submit"
                   name="action"
@@ -32,12 +32,11 @@
     {% else %}
       <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
         <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
-          Today is a Rest Day
+          Day {{ current_day_index + 1 }} – Rest Day
         </p>
       </div>
     {% endif %}
   {% endif %}
-
 
   <!-- Routine cards --> 
   {% for r in routines %}

@@ -331,6 +331,10 @@ def handle_edit_program(program_id):
         # Update the program metadata (name, length, loop)
         update_program_metadata(program_id, name, days, loop)
 
+        if program["is_active"]:
+            deactivate_all_programs(user_id)
+            flash("Program was active and has been deactivated due to edits.", "warning")
+            
         # Clear and re-add routines for the new layout
         delete_program_routines(program_id)
 
@@ -360,33 +364,37 @@ def handle_premade(request):
     user_id = get_current_user_id()
     routines = get_all_routines(user_id)
     programs = get_user_programs(user_id)
-    today_routine = None
+    active_program = get_active_program(user_id)
 
-    # Collect all routine_ids used across all programs
+    today_routine = None
+    current_day_index = None
     routine_ids_in_programs = set()
+
+    # Gather all routines used in any program
     for p in programs:
         for r in get_program_routines(p["id"]):
             if r.get("routine_id"):
                 routine_ids_in_programs.add(r["routine_id"])
 
-    # Identify today’s routine if there's an active program
-    active_program = get_active_program(user_id)
+    # Determine today’s routine based on active program (with offset)
     if active_program:
         days = active_program["days"]
         loop = active_program["loop"]
         start_date = active_program["start_date"]
+        start_day_offset = active_program["current_day"]
         today = datetime.now(get_timezone_from_settings(get_settings())).date()
+
         delta_days = (today - start_date).days
-        current_day = delta_days % days if loop else delta_days
+        current_day_index = (start_day_offset + delta_days) % days if loop else (start_day_offset + delta_days)
 
-        if current_day < days:
-            today_routine = get_routine_by_day(active_program["id"], current_day)
+        if current_day_index < days:
+            today_routine = get_routine_by_day(active_program["id"], current_day_index)
 
-    # Annotate routines for deletion protection
+    # Mark routines that are in any program
     for r in routines:
         r["is_in_active_program"] = r["id"] in routine_ids_in_programs
 
-    # Handle POST
+    # Handle form submissions
     if request.method == "POST":
         action = request.form.get("action")
 
@@ -408,4 +416,6 @@ def handle_premade(request):
 
     return render_template("premade.html",
                            routines=routines,
-                           today_routine=today_routine, active_program=active_program)
+                           today_routine=today_routine,
+                           active_program=active_program,
+                           current_day_index=current_day_index)
