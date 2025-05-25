@@ -7,34 +7,37 @@
 <div class="w-100" style="max-width: 400px;">
 
   <!-- Today’s routine card --> 
-  {% if today_routine and today_routine.routine_id %}
-    <div class="home-card mb-4 p-3 border border-success border-2">
-      <form method="POST" class="d-flex align-items-center justify-content-between">
-        <button type="submit"
-                name="action"
-                value="start_{{ today_routine.id }}"
-                class="btn btn-link text-success text-decoration-none fw-bold flex-grow-1 text-start"
-                style="font-size: 1.4rem;">
-          Today's Scheduled: {{ today_routine.name }}
-        </button>
-        <button type="submit"
-                name="action"
-                value="preview_{{ today_routine.id }}"
-                formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
-                formmethod="get"
-                class="btn btn-sm btn-link text-success p-0"
-                aria-label="Preview">
-          <i class="bi bi-eye-fill"></i>
-        </button>
-      </form>
-    </div>
-  {% else %}
-    <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
-      <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
-        Today is a Rest Day
-      </p>
-    </div>
+  {% if active_program %}
+    {% if today_routine and today_routine.routine_id %}
+      <div class="home-card mb-4 p-3 border border-success border-2">
+        <form method="POST" class="d-flex align-items-center justify-content-between">
+          <button type="submit"
+                  name="action"
+                  value="start_{{ today_routine.id }}"
+                  class="btn btn-link text-success text-decoration-none fw-bold flex-grow-1 text-start"
+                  style="font-size: 1.4rem;">
+            Today's Scheduled: {{ today_routine.name }}
+          </button>
+          <button type="submit"
+                  name="action"
+                  value="preview_{{ today_routine.id }}"
+                  formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
+                  formmethod="get"
+                  class="btn btn-sm btn-link text-success p-0"
+                  aria-label="Preview">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
+        <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
+          Today is a Rest Day
+        </p>
+      </div>
+    {% endif %}
   {% endif %}
+
 
   <!-- Routine cards --> 
   {% for r in routines %}
