@@ -75,8 +75,8 @@ presaved_exercises = [
 
 preferred_order = [
     "Chest", "Upper Chest", "Lower Chest",
-    "Back", "Lats", "Rhomboids", "Traps", "Erectors",
-    "Shoulders", "Front Delts", "Side Delts", "Rear Delts",
+    "Lats", "Rhomboids", "Traps", "Erectors",
+    "Front Delts", "Side Delts", "Rear Delts",
     "Biceps", "Triceps", 
     "Quads", "Hamstrings", "Glutes", "Calves", "Adductors", "Abductors",
     "Abs", "Obliques"
