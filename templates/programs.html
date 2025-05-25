@@ -29,7 +29,7 @@
               </form>
             </div>
           </div>
-          
+
             {% if p.id == active_id %}
             <!-- Deactivate Button -->
             <form method="POST" action="{{ url_for('deactivate_selected_program', program_id=p.id) }}">
@@ -80,30 +80,17 @@
 
 {% block page_scripts %}
 <script>
-function openModal(programId, routines) {
-  const modal = document.getElementById("startDayModal");
-  const form = document.getElementById("modalForm");
-  const select = document.getElementById("modalDaySelect");
-
-  form.action = `/activate-program/${programId}`;
-  select.innerHTML = "";
-
-  const defaultOption = document.createElement("option");
-  defaultOption.disabled = true;
-  defaultOption.selected = true;
-  defaultOption.textContent = "Choose start day for today";
-  select.appendChild(defaultOption);
-
-  routines.forEach((r, i) => {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = `Day ${i + 1} – ${r.routine_id ? r.name : "Rest Day"}`;
-    select.appendChild(opt);
+function openModal(programId) {
+  // Hide all other activate forms first
+  document.querySelectorAll('[id^="activate-form-"]').forEach(form => {
+    form.style.display = 'none';
   });
 
-  document.getElementById("modalStartDay").value = select.value;
-  modal.style.display = "flex";
+  // Show only the selected one
+  const form = document.getElementById(`activate-form-${programId}`);
+  if (form) {
+    form.style.display = "block";
+  }
 }
-
 </script>
 {% endblock %}
