@@ -308,31 +308,51 @@ def render_edit_routine_form(routine_id):
 def handle_edit_program(program_id):
     user_id = get_current_user_id()
     program = get_program_by_id(program_id)
+
+    if not program or program["user_id"] != user_id:
+        flash("Program not found or access denied.", "danger")
+        return redirect(url_for("view_programs"))
+
     all_routines = get_all_routines(user_id)
     current_routines = get_program_routines(program_id)
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
-        days = int(request.form.get("days", 3))
+        try:
+            days = int(request.form.get("days", 3))
+        except ValueError:
+            days = 3
         loop = request.form.get("loop") == "on"
 
         if not name or days < 1 or days > 10:
-            flash("Invalid input.", "danger")
+            flash("Invalid input. Name required and days must be between 1 and 10.", "danger")
             return redirect(url_for("edit_program", program_id=program_id))
 
+        # Update the program metadata (name, length, loop)
         update_program_metadata(program_id, name, days, loop)
-        delete_program(program_id)
+
+        # Clear and re-add routines for the new layout
+        delete_program_routines(program_id)
 
         for i in range(days):
             routine_id = request.form.get(f"routine_day_{i}")
-            if routine_id != "rest":
-                insert_program_routine(program_id, i, int(routine_id))
+            if routine_id and routine_id != "rest":
+                try:
+                    insert_program_routine(program_id, i, int(routine_id))
+                except ValueError:
+                    pass  # Ignore if routine_id is somehow invalid
 
-        flash("Program updated!", "success")
+        flash("Program updated successfully!", "success")
         return redirect(url_for("view_programs"))
+
+    # Pad current routines to match the expected day count
+    padded_routines = [None] * program["days"]
+    for r in current_routines:
+        padded_routines[r["day_index"]] = r
 
     return render_template("edit_program.html",
                            program=program,
-                           routines=current_routines,
+                           routines=padded_routines,
                            all_routines=all_routines,
                            settings=get_settings())
+
