@@ -22,6 +22,7 @@ create_routine_sets_table()
 create_user_settings_table()
 create_programs_table()
 create_program_routines_table()
+add_current_day_column()
 
 # --- SESSION HANDLING ---
 @app.before_request

@@ -25,16 +25,23 @@
             <!-- Summary -->
             <a href="{{ url_for('program_summary', program_id=p.id) }}" class="btn btn-outline-dark btn-sm">📊 Summary</a>
 
-            <!-- Activate -->
-            <form method="POST" action="{{ url_for('activate_selected_program', program_id=p.id) }}">
+            <!-- Single Activate button with JS-triggered day selector -->
+            <button class="btn btn-sm btn-outline-success w-100"
+                    onclick="showDaySelector({{ p.id }})">
+            Activate
+            </button>
+
+            <!-- Hidden form with day dropdown, revealed by JS -->
+            <form method="POST"
+                id="activate-form-{{ p.id }}"
+                action="{{ url_for('activate_selected_program', program_id=p.id) }}"
+                style="display: none;" class="mt-2">
             <select name="start_day" class="form-select mb-2" required>
-                {% for r in p.routines %}
-                <option value="{{ loop.index0 }}">
-                    Day {{ loop.index }} – {{ r.name if r.routine_id else 'Rest Day' }}
-                </option>
+                {% for i, r in enumerate(p.routines) %}
+                <option value="{{ i }}">Day {{ i + 1 }} – {{ r.name if r.routine_id else 'Rest Day' }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="btn btn-sm btn-outline-success w-100">Activate</button>
+            <button type="submit" class="btn btn-sm btn-success w-100">Confirm Start Day</button>
             </form>
 
             <!-- Edit -->
@@ -61,3 +68,13 @@
   </div>
 {% endif %}
 {% endblock %}
+
+{% block page_scripts %}
+<script>
+  function showDaySelector(programId) {
+    const form = document.getElementById(`activate-form-${programId}`);
+    if (form) form.style.display = 'block';
+  }
+</script>
+{% endblock %}
+

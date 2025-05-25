@@ -416,3 +416,11 @@ def get_routine_by_day(program_id, day_index):
                 LIMIT 1
             """, (program_id, day_index))
             return cur.fetchone()
+
+def add_current_day_column():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                ALTER TABLE programs
+                ADD COLUMN IF NOT EXISTS current_day INTEGER DEFAULT 0;
+            """)
