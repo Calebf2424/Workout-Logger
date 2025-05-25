@@ -293,7 +293,7 @@ def create_programs_table():
                     days INTEGER NOT NULL,
                     loop BOOLEAN DEFAULT TRUE,
                     is_active BOOLEAN DEFAULT FALSE,
-                    start_date DATE DEFAULT CURRENT_DATE
+                    start_date DATE DEFAULT CURRENT_DATE,
                     current_day INTEGER DEFAULT 0
                 );
             """)
