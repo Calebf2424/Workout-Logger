@@ -505,9 +505,13 @@ def dev_usernames():
 def view_programs():
     user_id = get_current_user_id()
     programs = get_user_programs(user_id)
+    active = get_active_program(user_id)
+    active_id = active["id"] if active else None
+
     for p in programs:
         p["routines"] = get_program_routines(p["id"])
-    return render_template("programs.html", programs=programs)
+
+    return render_template("programs.html", programs=programs, active_id=active_id)
 
 @app.route("/create-program", methods=["GET", "POST"])
 def create_program():
@@ -595,3 +599,14 @@ def program_summary(program_id):
 @app.route("/edit-program/<int:program_id>", methods=["GET", "POST"])
 def edit_program(program_id):
     return handle_edit_program(program_id)
+
+@app.route("/deactivate-program/<int:program_id>", methods=["POST"])
+def deactivate_selected_program(program_id):
+    user_id = get_current_user_id()
+    program = get_program_by_id(program_id)
+
+    if program and program["user_id"] == user_id:
+        deactivate_all_programs(user_id)
+        flash("Program deactivated.", "warning")
+
+    return redirect(url_for("view_programs"))
