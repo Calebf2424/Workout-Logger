@@ -6,7 +6,6 @@
 
 <div class="w-100" style="max-width: 400px;">
 
-  <!-- Today’s routine card --> 
   {% if active_program %}
     {% if today_routine %}
       <div class="home-card mb-4 p-3 border border-success border-2">
@@ -18,46 +17,74 @@
                   style="font-size: 1.4rem;">
             Day {{ current_day_index + 1 }} – {{ today_routine.name }}
           </button>
-          <button type="submit"
-                  name="action"
-                  value="preview_{{ today_routine.id }}"
-                  formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
-                  formmethod="get"
-                  class="btn btn-sm btn-link text-success p-0"
-                  aria-label="Preview">
-            <i class="bi bi-eye-fill"></i>
-          </button>
+
+          <div class="d-flex gap-2">
+            <button type="submit"
+                    name="action"
+                    value="preview_{{ today_routine.id }}"
+                    formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
+                    formmethod="get"
+                    class="btn btn-sm btn-link text-success p-0"
+                    aria-label="Preview">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+
+            <button type="button"
+                    class="btn btn-sm btn-link text-success p-0"
+                    onclick="document.getElementById('change-day-form').classList.toggle('d-none');"
+                    aria-label="Change Day"
+                    title="Change Day">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+          </div>
         </form>
+
+        <form method="POST" id="change-day-form" class="mt-2 d-none">
+          <div class="d-flex align-items-center justify-content-between">
+            <label for="new_day" class="form-label mb-0 fw-semibold small me-2">Change to:</label>
+            <select name="new_day" id="new_day" class="form-select form-select-sm w-auto me-2">
+              {% for i in range(active_program.days) %}
+                <option value="{{ i }}" {% if i == current_day_index %}selected{% endif %}>
+                  Day {{ i + 1 }}
+                </option>
+              {% endfor %}
+            </select>
+            <button type="submit" name="action" value="change_day" class="btn btn-sm btn-outline-secondary">Set</button>
+          </div>
+        </form>
+      </div>
     {% else %}
       <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
         <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
           Day {{ current_day_index + 1 }} – Rest Day
         </p>
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary mt-2"
+                onclick="document.getElementById('change-day-form').classList.toggle('d-none');">
+          Change Day
+        </button>
+        <form method="POST" id="change-day-form" class="mt-2 d-none">
+          <div class="d-flex align-items-center justify-content-center">
+            <label for="new_day_rest" class="form-label mb-0 fw-semibold small me-2">Change to:</label>
+            <select name="new_day" id="new_day_rest" class="form-select form-select-sm w-auto me-2">
+              {% for i in range(active_program.days) %}
+                <option value="{{ i }}" {% if i == current_day_index %}selected{% endif %}>
+                  Day {{ i + 1 }}
+                </option>
+              {% endfor %}
+            </select>
+            <button type="submit" name="action" value="change_day" class="btn btn-sm btn-outline-secondary">Set</button>
+          </div>
+        </form>
+      </div>
     {% endif %}
-
-      <!-- Change Day Form -->
-      <form method="POST" class="mt-2">
-        <div class="d-flex align-items-center justify-content-between">
-          <label for="new_day" class="form-label mb-0 fw-semibold small me-2">Change Current Day:</label>
-          <select name="new_day" id="new_day" class="form-select form-select-sm w-auto me-2">
-            {% for i in range(active_program.days) %}
-              <option value="{{ i }}" {% if i == current_day_index %}selected{% endif %}>
-                Day {{ i + 1 }}
-              </option>
-            {% endfor %}
-          </select>
-          <button type="submit" name="action" value="change_day" class="btn btn-sm btn-outline-secondary">Set</button>
-        </div>
-      </form>
-    </div>
   {% endif %}
 
-
-  <!-- Routine cards --> 
+  <!-- Routine cards -->
   {% for r in routines %}
     <div class="home-card mb-3 px-3 py-3">
-      <form method="POST" class="d-flex align-items-center justify-content-between">
-        <!-- Start routine (left side) -->
+      <form method="POST" class="d-flex align-items-center justify-content-between"
+            onsubmit="event.preventDefault(); confirmRoutineOverride(this, {{ r.id == today_routine.id if today_routine else 'false' }});">
         <button type="submit"
                 name="action"
                 value="start_{{ r.id }}"
@@ -67,7 +94,6 @@
         </button>
 
         <div class="d-flex align-items-center">
-          <!-- Preview -->
           <button type="submit"
                   name="action"
                   value="preview_{{ r.id }}"
@@ -78,7 +104,6 @@
             <i class="bi bi-eye-fill"></i>
           </button>
 
-          <!-- Edit -->
           <a href="{{ url_for('edit_routine', routine_id=r.id) }}"
              class="btn btn-sm btn-link text-dark me-2 p-0"
              aria-label="Edit">
@@ -86,7 +111,6 @@
           </a>
 
           {% if not r.is_in_active_program %}
-            <!-- Delete (allowed) -->
             <button type="submit"
                     name="action"
                     value="delete_{{ r.id }}"
@@ -96,7 +120,6 @@
               <i class="bi bi-trash-fill"></i>
             </button>
           {% else %}
-            <!-- Lock (blocked) – triggers toast, not submission -->
             <button type="button"
                     class="btn btn-sm btn-link text-muted p-0"
                     aria-label="Cannot delete"
@@ -110,7 +133,6 @@
     </div>
   {% endfor %}
 
-  <!--- Add-new card -->
   <div class="home-card mb-3 px-2 py-1">
     <form method="POST" class="d-flex align-items-center justify-content-center">
       <button type="submit"
@@ -123,7 +145,6 @@
     </form>
   </div>
 
-  <!-- Home -->
   <div class="text-center mt-3">
     <a href="{{ url_for('index') }}" class="btn btn-light">
       <i class="bi bi-house-fill me-1"></i> Home
@@ -134,7 +155,8 @@
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
   <div id="cannotDeleteToast"
        class="toast align-items-center text-bg-warning border-0"
-       role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2500" data-bs-autohide="true">
+       role="alert" aria-live="assertive" aria-atomic="true"
+       data-bs-delay="2500" data-bs-autohide="true">
     <div class="d-flex">
       <div class="toast-body">
         This routine is part of a program and cannot be deleted.
@@ -148,11 +170,21 @@
 
 {% block page_scripts %}
 <script>
-  // Show Bootstrap toast when user clicks the lock-button
   function showCannotDeleteToast() {
     const toastEl = document.getElementById('cannotDeleteToast');
     const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
     toast.show();
+  }
+
+  function confirmRoutineOverride(formElem, isTodayRoutine) {
+    if (isTodayRoutine) {
+      formElem.submit();
+      return;
+    }
+    const confirmed = confirm("This is not today's scheduled routine. Start anyway?");
+    if (confirmed) {
+      formElem.submit();
+    }
   }
 </script>
 {% endblock %}
