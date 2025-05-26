@@ -43,7 +43,7 @@
               <input type="text" id="routine_name" name="routine_name" class="form-control" required>
             </div>
             <button type="submit" name="action" value="add" class="btn btn-primary w-100 py-2">
-              ➕ Create Routine
+               Create Routine
             </button>
           {% else %}
             <!-- Exercise selector -->
@@ -113,7 +113,7 @@
                 <input type="hidden" name="action" value="save">
                 <input type="hidden" name="order" id="order-input">
                 <button type="submit" class="btn btn-success w-100">
-                  💾 Save Routine
+                   Save Routine
                 </button>
               </form>              
           </div>
@@ -122,7 +122,7 @@
         <!-- Discard always visible -->
         <form method="POST" onsubmit="return confirmDiscard();" class="mt-2">
           <button type="submit" name="action" value="discard" class="btn btn-danger w-100">
-            🗑️ Discard Routine
+             Discard Routine
           </button>
         </form>
       {% endif %}

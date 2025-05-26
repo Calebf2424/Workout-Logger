@@ -437,15 +437,38 @@ def skip_set():
         return redirect(url_for("premade"))
 
     idx = routine["current_index"]
-    skipped = routine["sets"][idx]
+    sets = routine["sets"]
+
+    # Safety: ensure index is valid
+    if idx >= len(sets):
+        flash("No more sets.")
+        return redirect(url_for("workout_mode"))
+
+    skipped_set = sets[idx]
 
     if action == "skip_later":
-        routine["sets"].append(skipped)  # move to end
-    # In either case, move forward
-    routine["current_index"] += 1
+        # Move to end, but don't advance index
+        sets.append(skipped_set)
+        sets.pop(idx)  # remove from current spot
 
+        # index stays the same
+    elif action == "skip_today":
+        # Just remove it permanently
+        sets.pop(idx)
+
+        # index stays the same, next set shifts into this position
+
+    # If no sets left, go back to home
+    if not sets:
+        flash("All sets skipped.", "info")
+        session.pop("active_routine", None)
+        return redirect(url_for("premade"))
+
+    # Save updated session
+    routine["sets"] = sets
+    routine["current_index"] = idx  # index unchanged
     session["active_routine"] = routine
-    
+
     return redirect(url_for("workout_mode"))
 
 #dev routes
