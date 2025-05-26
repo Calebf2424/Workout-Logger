@@ -19,15 +19,13 @@
           </button>
 
           <div class="d-flex gap-2">
-            <button type="submit"
-                    name="action"
-                    value="preview_{{ today_routine.id }}"
-                    formaction="{{ url_for('preview_routine', routine_id=today_routine.id) }}"
-                    formmethod="get"
-                    class="btn btn-sm btn-link text-success p-0"
-                    aria-label="Preview">
-              <i class="bi bi-eye-fill"></i>
-            </button>
+            <form method="GET" action="{{ url_for('preview_routine', routine_id=today_routine.id) }}">
+              <button type="submit"
+                      class="btn btn-sm btn-link text-success p-0"
+                      aria-label="Preview">
+                <i class="bi bi-eye-fill"></i>
+              </button>
+            </form>
 
             <button type="button"
                     class="btn btn-sm btn-link text-success p-0"
@@ -83,8 +81,9 @@
   <!-- Routine cards -->
   {% for r in routines %}
     <div class="home-card mb-3 px-3 py-3">
-      <form method="POST" class="d-flex align-items-center justify-content-between"
-            onsubmit="return handleRoutineFormSubmit(event, this, {{ r.id == today_routine.id if today_routine else 'false' }});">
+      <form method="POST"
+            class="d-flex align-items-center justify-content-between"
+            onsubmit="return confirmRoutineOverride({{ r.id == today_routine.id if today_routine else 'false' }});">
         <button type="submit"
                 name="action"
                 value="start_{{ r.id }}"
@@ -94,15 +93,13 @@
         </button>
 
         <div class="d-flex align-items-center">
-          <button type="submit"
-                  name="action"
-                  value="preview_{{ r.id }}"
-                  formaction="{{ url_for('preview_routine', routine_id=r.id) }}"
-                  formmethod="get"
-                  class="btn btn-sm btn-link text-dark me-2 p-0"
-                  aria-label="Preview">
-            <i class="bi bi-eye-fill"></i>
-          </button>
+          <form method="GET" action="{{ url_for('preview_routine', routine_id=r.id) }}">
+            <button type="submit"
+                    class="btn btn-sm btn-link text-dark me-2 p-0"
+                    aria-label="Preview">
+              <i class="bi bi-eye-fill"></i>
+            </button>
+          </form>
 
           <a href="{{ url_for('edit_routine', routine_id=r.id) }}"
              class="btn btn-sm btn-link text-dark me-2 p-0"
@@ -176,20 +173,9 @@
     toast.show();
   }
 
-  function handleRoutineFormSubmit(event, formElem, isTodayRoutine) {
-    const clickedButton = document.activeElement;
-
-    // Allow preview and other non-start actions to go through
-    if (!clickedButton || !clickedButton.name || !clickedButton.value.startsWith("start_")) {
-      return true; // allow normal submission
-    }
-
-    if (isTodayRoutine) {
-      return true; // allow without prompt
-    }
-
-    const confirmed = confirm("This is not today's scheduled routine. Start anyway?");
-    return confirmed; // only submit if confirmed
+  function confirmRoutineOverride(isTodayRoutine) {
+    if (isTodayRoutine) return true;
+    return confirm("This is not today's scheduled routine. Start anyway?");
   }
 </script>
 {% endblock %}
