@@ -84,7 +84,7 @@
   {% for r in routines %}
     <div class="home-card mb-3 px-3 py-3">
       <form method="POST" class="d-flex align-items-center justify-content-between"
-            onsubmit="event.preventDefault(); confirmRoutineOverride(this, {{ r.id == today_routine.id if today_routine else 'false' }});">
+            onsubmit="return handleRoutineFormSubmit(event, this, {{ r.id == today_routine.id if today_routine else 'false' }});">
         <button type="submit"
                 name="action"
                 value="start_{{ r.id }}"
@@ -176,15 +176,20 @@
     toast.show();
   }
 
-  function confirmRoutineOverride(formElem, isTodayRoutine) {
+  function handleRoutineFormSubmit(event, formElem, isTodayRoutine) {
+    const clickedButton = document.activeElement;
+
+    // Allow preview and other non-start actions to go through
+    if (!clickedButton || !clickedButton.name || !clickedButton.value.startsWith("start_")) {
+      return true; // allow normal submission
+    }
+
     if (isTodayRoutine) {
-      formElem.submit();
-      return;
+      return true; // allow without prompt
     }
+
     const confirmed = confirm("This is not today's scheduled routine. Start anyway?");
-    if (confirmed) {
-      formElem.submit();
-    }
+    return confirmed; // only submit if confirmed
   }
 </script>
 {% endblock %}
