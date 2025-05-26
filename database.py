@@ -417,3 +417,13 @@ def get_routine_by_day(program_id, day_index):
                 LIMIT 1
             """, (program_id, day_index))
             return cur.fetchone()
+
+def update_current_day_for_program(program_id, new_day):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE programs
+                SET current_day = %s,
+                    start_date = CURRENT_DATE
+                WHERE id = %s
+            """, (new_day, program_id))

@@ -28,15 +28,30 @@
             <i class="bi bi-eye-fill"></i>
           </button>
         </form>
-      </div>
     {% else %}
       <div class="home-card mb-4 p-3 border border-secondary border-2 text-center">
         <p class="mb-0 fw-semibold text-muted" style="font-size: 1.2rem;">
           Day {{ current_day_index + 1 }} – Rest Day
         </p>
-      </div>
     {% endif %}
+
+      <!-- Change Day Form -->
+      <form method="POST" class="mt-2">
+        <div class="d-flex align-items-center justify-content-between">
+          <label for="new_day" class="form-label mb-0 fw-semibold small me-2">Change Current Day:</label>
+          <select name="new_day" id="new_day" class="form-select form-select-sm w-auto me-2">
+            {% for i in range(active_program.days) %}
+              <option value="{{ i }}" {% if i == current_day_index %}selected{% endif %}>
+                Day {{ i + 1 }}
+              </option>
+            {% endfor %}
+          </select>
+          <button type="submit" name="action" value="change_day" class="btn btn-sm btn-outline-secondary">Set</button>
+        </div>
+      </form>
+    </div>
   {% endif %}
+
 
   <!-- Routine cards --> 
   {% for r in routines %}

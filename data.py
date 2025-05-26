@@ -334,7 +334,7 @@ def handle_edit_program(program_id):
         if program["is_active"]:
             deactivate_all_programs(user_id)
             flash("Program was active and has been deactivated due to edits.", "warning")
-            
+
         # Clear and re-add routines for the new layout
         delete_program_routines(program_id)
 
@@ -413,6 +413,12 @@ def handle_premade(request):
             delete_routine(routine_id)
             flash("Routine deleted.", "success")
             return redirect(url_for("premade"))
+        elif action == "change_day":
+            new_day = int(request.form.get("new_day", 0))
+            update_current_day_for_program(active_program["id"], new_day)
+            flash(f"Program day set to Day {new_day + 1}.", "success")
+            return redirect(url_for("premade"))
+
 
     return render_template("premade.html",
                            routines=routines,
