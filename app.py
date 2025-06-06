@@ -488,9 +488,15 @@ def dev_user_count():
 def dev_usernames():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT username FROM users WHERE username IS NOT NULL ORDER BY username")
-            names = [row["username"] for row in cur.fetchall()]
-    return jsonify({"usernames": names})
+            cur.execute("SELECT username, created_at FROM users WHERE username IS NOT NULL ORDER BY created_at")
+            users = [
+                {
+                    "username": row["username"],
+                    "created_at": row["created_at"].strftime("%Y-%m-%d")
+                }
+                for row in cur.fetchall()
+            ]
+    return jsonify({"usernames": users})
 
 #programming routes
 @app.route("/programs")

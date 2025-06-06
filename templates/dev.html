@@ -36,9 +36,9 @@
                 if (data.usernames.length === 0) {
                     list.innerHTML = "<li><em>No usernames found</em></li>";
                 } else {
-                    data.usernames.forEach(name => {
+                    data.usernames.forEach(user => {
                         const li = document.createElement("li");
-                        li.textContent = name;
+                        li.textContent = `${user.username} – Joined: ${user.created_at}`;
                         list.appendChild(li);
                     });
                 }
