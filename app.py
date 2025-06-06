@@ -498,6 +498,26 @@ def dev_usernames():
             ]
     return jsonify({"usernames": users})
 
+@app.route("/dev/user-activity")
+def dev_user_activity():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT 
+                    u.username,
+                    MAX(DATE(s.timestamp)) AS last_workout,
+                    COUNT(DISTINCT DATE(s.timestamp)) AS total_workouts,
+                    COUNT(s.id) AS total_sets
+                FROM users u
+                JOIN sets s ON u.id = s.user_id
+                WHERE u.username IS NOT NULL
+                GROUP BY u.username
+                ORDER BY last_workout DESC NULLS LAST
+            """)
+            results = cur.fetchall()
+    return jsonify({"activity": results})
+
+
 #programming routes
 @app.route("/programs")
 def view_programs():
@@ -612,3 +632,5 @@ def deactivate_selected_program(program_id):
         flash("Program deactivated.", "warning")
 
     return redirect(url_for("view_programs"))
+
+

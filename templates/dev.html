@@ -3,16 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>Dev Dashboard</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        table, th, td {
+            border: 1px solid #aaa;
+        }
+        th, td {
+            padding: 0.5rem 1rem;
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
     <h1>Dev Dashboard</h1>
 
     <p>Guest Users: <span id="user-count">Loading...</span></p>
 
-    <h2>Registered Usernames</h2>
-    <ul id="usernames">
-        <li>Loading...</li>
-    </ul>
+    <h2>Registered Users</h2>
+    <table id="user-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="2">Loading...</td></tr>
+        </tbody>
+    </table>
+
+    <h2>User Activity</h2>
+    <table id="user-activity">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Last Workout</th>
+                <th>Total Days Worked Out</th>
+                <th>Total Sets Logged</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="4">Loading...</td></tr>
+        </tbody>
+    </table>
 
     <script>
         // Fetch guest user count
@@ -26,25 +70,50 @@
                 console.error(err);
             });
 
-        // Fetch usernames
+        // Fetch usernames + created_at
         fetch("/dev/usernames")
             .then(res => res.json())
             .then(data => {
-                const list = document.getElementById("usernames");
-                list.innerHTML = ""; // Clear loading text
-
-                if (data.usernames.length === 0) {
-                    list.innerHTML = "<li><em>No usernames found</em></li>";
+                const tbody = document.querySelector("#user-table tbody");
+                tbody.innerHTML = "";
+                if (data.users.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='2'><em>No usernames found</em></td></tr>";
                 } else {
-                    data.usernames.forEach(user => {
-                        const li = document.createElement("li");
-                        li.textContent = `${user.username} – Joined: ${user.created_at}`;
-                        list.appendChild(li);
+                    data.users.forEach(user => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `<td>${user.username}</td><td>${user.created_at || "—"}</td>`;
+                        tbody.appendChild(tr);
                     });
                 }
             })
             .catch(err => {
-                document.getElementById("usernames").innerHTML = "<li>Error loading</li>";
+                document.querySelector("#user-table tbody").innerHTML = "<tr><td colspan='2'>Error loading</td></tr>";
+                console.error(err);
+            });
+
+        // Fetch user activity
+        fetch("/dev/user-activity")
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.querySelector("#user-activity tbody");
+                tbody.innerHTML = "";
+                if (data.activity.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='4'><em>No activity found</em></td></tr>";
+                } else {
+                    data.activity.forEach(user => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td>${user.username}</td>
+                            <td>${user.last_workout || '—'}</td>
+                            <td>${user.total_workouts}</td>
+                            <td>${user.total_sets}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            })
+            .catch(err => {
+                document.querySelector("#user-activity tbody").innerHTML = "<tr><td colspan='4'>Error loading</td></tr>";
                 console.error(err);
             });
     </script>
